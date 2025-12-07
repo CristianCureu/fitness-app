@@ -1,24 +1,36 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { ReactQueryProvider } from '@/lib/providers/react-query-provider';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { useProtectedRoute } from '@/lib/hooks/use-protected-route';
+import { LoadingScreen } from '@/components/loading-screen';
+import '../global.css';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function RootLayoutNav() {
+  const { isInitialized } = useProtectedRoute();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  if (!isInitialized) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="auth" />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    initialize();
+  }, []);
+
+  return (
+    <ReactQueryProvider>
+      <RootLayoutNav />
+    </ReactQueryProvider>
   );
 }

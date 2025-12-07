@@ -1,98 +1,53 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useAppUser } from "@/lib/stores/auth-store";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const appUser = useAppUser();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <ScrollView className="flex-1 bg-background">
+      {/* Header */}
+      <View className="px-6 pt-16 pb-6">
+        <Text className="text-text-secondary text-sm mb-2">Welcome back,</Text>
+        <Text className="text-text-primary text-3xl font-bold">
+          {appUser?.clientProfile?.firstName || "User"}
+        </Text>
+      </View>
+
+      {/* Quick Actions */}
+      <View className="px-6 mb-6">
+        <Text className="text-text-secondary text-sm font-semibold mb-3 uppercase tracking-wider">
+          Quick Actions
+        </Text>
+        <View className="flex-row gap-3">
+          <TouchableOpacity className="flex-1 bg-surface border border-border rounded-2xl p-4">
+            <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+              <Text className="text-primary text-xl">🏋️</Text>
+            </View>
+            <Text className="text-text-primary font-semibold mb-1">Start Workout</Text>
+            <Text className="text-text-muted text-xs">Begin your session</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-1 bg-surface border border-border rounded-2xl p-4">
+            <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+              <Text className="text-primary text-xl">📊</Text>
+            </View>
+            <Text className="text-text-primary font-semibold mb-1">Log Progress</Text>
+            <Text className="text-text-muted text-xs">Track your gains</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Recent Activity */}
+      <View className="px-6 mb-6">
+        <Text className="text-text-secondary text-sm font-semibold mb-3 uppercase tracking-wider">
+          Recent Activity
+        </Text>
+        <View className="bg-surface border border-border rounded-2xl p-6 items-center">
+          <Text className="text-text-muted text-sm">No recent activity</Text>
+          <Text className="text-text-muted text-xs mt-1">Start your first workout!</Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
