@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { UserRole } from "@/lib/types/api";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
@@ -49,7 +51,22 @@ function TabIcon({ name, color, focused }: TabIconProps) {
   );
 }
 
+type TabConfig = {
+  name: string;
+  title: string;
+  icon: IoniconName;
+  roles?: UserRole[];
+};
+
 export default function TabLayout() {
+  const role = useAuthStore((s) => s.appUser?.role);
+  const tabs: TabConfig[] = [
+    { name: "index", title: "Home", icon: "home" },
+    { name: "workouts", title: "Workouts", icon: "barbell-outline" },
+    { name: "invites", title: "Clients", icon: "people", roles: ["TRAINER"] },
+    { name: "profile", title: "Profile", icon: "person" },
+  ];
+
   const tabBarStyle: BottomTabNavigationOptions["tabBarStyle"] = Platform.select({
     ios: {
       backgroundColor: COLORS.background,
@@ -82,35 +99,25 @@ export default function TabLayout() {
         tabBarStyle,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="home" color={color} focused={focused} />
-          ),
-        }}
-      />
+      {tabs.map((tab) => {
+        const isAllowed = !tab.roles || (role && tab.roles.includes(role));
 
-      <Tabs.Screen
-        name="workouts"
-        options={{
-          title: "Workouts",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="barbell-outline" color={color} focused={focused} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="person" color={color} focused={focused} />
-          ),
-        }}
-      />
+        return (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            options={{
+              title: tab.title,
+              href: isAllowed ? undefined : null,
+              tabBarIcon: isAllowed
+                ? ({ color, focused }) => (
+                    <TabIcon name={tab.icon} color={color} focused={focused} />
+                  )
+                : undefined,
+            }}
+          />
+        );
+      })}
     </Tabs>
   );
 }

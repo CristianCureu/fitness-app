@@ -49,4 +49,20 @@ export const queryKeys = {
     detail: (id: string) => ['nutrition', id] as const,
     current: () => ['nutrition', 'current'] as const,
   },
+
+  // Onboarding
+  onboarding: {
+    status: () => ['onboarding', 'status'] as const,
+  },
+
+  // Users
+  users: {
+    me: () => ['users', 'me'] as const,
+  },
+
+  // Invite codes (TRAINER only)
+  invites: {
+    all: () => ['invites'] as const,
+    detail: (id: string) => ['invites', id] as const,
+  },
 } as const;

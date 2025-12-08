@@ -25,11 +25,22 @@ export interface AppUser {
   createdAt: string;
   updatedAt: string;
   clientProfile?: ClientProfile;
+  trainerProfile?: TrainerProfile;
   trainerClients?: ClientProfile[];
 }
 
 export interface RegisterRequest {
   authId: string;
+}
+
+export interface TrainerProfile {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  bio?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Client Profile Types
@@ -49,6 +60,8 @@ export interface ClientProfile {
   programStartDate?: string;
   programWeeks?: number;
   recommendedSessionsPerWeek?: number;
+  onboardingCompleted: boolean;
+  onboardingCompletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -199,4 +212,65 @@ export interface RecommendationQueryParams {
 
 export interface NutritionGoalQueryParams {
   clientId?: string;
+}
+
+// Onboarding Types
+export interface OnboardingStatus {
+  completed: boolean;
+  completedAt?: string;
+  profileExists: boolean;
+}
+
+export interface ValidateInviteRequest {
+  inviteCode: string;
+}
+
+export interface ValidateInviteResponse {
+  valid: boolean;
+  message?: string;
+  trainerInfo?: {
+    trainerId: string;
+  };
+  prefillData?: {
+    clientEmail?: string;
+    clientFirstName?: string;
+    clientLastName?: string;
+  };
+}
+
+export interface CompleteOnboardingRequest {
+  inviteCode: string;
+  firstName: string;
+  lastName: string;
+  timezone?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  goalDescription?: string;
+  programStartDate?: string;
+  preferredSessionsPerWeek?: number;
+}
+
+export interface InviteCode {
+  id: string;
+  code: string;
+  used: boolean;
+  usedAt?: string;
+  expiresAt?: string;
+  clientEmail?: string;
+  usedBy?: {
+    id: string;
+    clientProfile: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  createdAt: string;
+}
+
+export interface CreateInviteRequest {
+  clientEmail?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
+  expiresInDays?: number;
 }

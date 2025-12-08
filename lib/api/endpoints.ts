@@ -2,21 +2,27 @@ import type {
   AppUser,
   CheckinQueryParams,
   ClientProfile,
+  CompleteOnboardingRequest,
   CreateCheckinDto,
   CreateClientProfileDto,
+  CreateInviteRequest,
   CreateNutritionGoalDto,
   CreateRecommendationDto,
   CreateSessionDto,
   DailyCheckin,
   DailyRecommendation,
+  InviteCode,
   NutritionGoal,
   NutritionGoalQueryParams,
+  OnboardingStatus,
   RecommendationQueryParams,
   RegisterRequest,
   ScheduledSession,
   SessionQueryParams,
   TodayView,
   UserRole,
+  ValidateInviteRequest,
+  ValidateInviteResponse,
 } from '../types/api';
 import { api } from './client';
 
@@ -234,4 +240,58 @@ export const nutritionApi = {
    */
   delete: (id: string) =>
     api.delete<void>(`/nutrition/goals/${id}`),
+};
+
+// ============================================================================
+// ONBOARDING ENDPOINTS
+// ============================================================================
+
+export const onboardingApi = {
+  /**
+   * Get onboarding status (CLIENT only)
+   */
+  getStatus: () =>
+    api.get<OnboardingStatus>('/onboarding/status'),
+
+  /**
+   * Validate invite code before completing onboarding (CLIENT only)
+   */
+  validateInvite: (data: ValidateInviteRequest) =>
+    api.post<ValidateInviteResponse>('/onboarding/validate-invite', data),
+
+  /**
+   * Complete onboarding with invite code (CLIENT only)
+   */
+  complete: (data: CompleteOnboardingRequest) =>
+    api.post<{ message: string; profile: ClientProfile }>('/onboarding/complete', data),
+};
+
+// ============================================================================
+// INVITE CODE ENDPOINTS (TRAINER only)
+// ============================================================================
+
+export const inviteApi = {
+  /**
+   * Create invite code (TRAINER only)
+   */
+  create: (data: CreateInviteRequest) =>
+    api.post<InviteCode>('/invites', data),
+
+  /**
+   * Get all invite codes (TRAINER only)
+   */
+  getAll: () =>
+    api.get<{ invites: InviteCode[] }>('/invites'),
+
+  /**
+   * Get single invite code by ID (TRAINER only)
+   */
+  getById: (id: string) =>
+    api.get<InviteCode>(`/invites/${id}`),
+
+  /**
+   * Delete invite code (TRAINER only)
+   */
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/invites/${id}`),
 };
