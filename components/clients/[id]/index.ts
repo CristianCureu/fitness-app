@@ -5,3 +5,6 @@ export { InfoRow } from "./InfoRow";
 export { NotesSection } from "./NotesSection";
 export { OnboardingInfoSection } from "./OnboardingInfoSection";
 export { Section } from "./Section";
+export { ActiveProgramSection } from "./ActiveProgramSection";
+export { RecommendationsSection } from "./RecommendationsSection";
+export { ProgramHistorySection } from "./ProgramHistorySection";

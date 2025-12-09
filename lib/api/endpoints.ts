@@ -7,15 +7,21 @@ import type {
   CreateClientProfileDto,
   CreateInviteRequest,
   CreateNutritionGoalDto,
+  AssignProgramRequest,
+  CreateProgramRequest,
   CreateRecommendationDto,
   CreateSessionDto,
+  ClientProgram,
   DailyCheckin,
   DailyRecommendation,
+  GetProgramHistoryResponse,
+  GetRecommendationsResponse,
   InviteCode,
   NutritionGoal,
   NutritionGoalQueryParams,
   OnboardingStatus,
   PaginatedResponse,
+  Program,
   RecommendationQueryParams,
   RegisterRequest,
   ScheduledSession,
@@ -25,6 +31,8 @@ import type {
   UserRole,
   ValidateInviteRequest,
   ValidateInviteResponse,
+  UpdateProgramRequest,
+  UpdateTrainingDaysRequest,
 } from '../types/api';
 import { api } from './client';
 
@@ -129,6 +137,78 @@ export const scheduleApi = {
     api.delete<void>(`/schedule/sessions/${id}`),
 };
 
+// ============================================================================
+// PROGRAMS (TRAINER)
+// ============================================================================
+
+export const programApi = {
+  /**
+   * Create a program template (TRAINER only)
+   */
+  create: (data: CreateProgramRequest) =>
+    api.post<Program>('/programs', data),
+
+  /**
+   * Get all programs (defaults + trainer-owned)
+   */
+  getAll: () =>
+    api.get<Program[]>('/programs'),
+
+  /**
+   * Get program by ID
+   */
+  getById: (id: string) =>
+    api.get<Program>(`/programs/${id}`),
+
+  /**
+   * Update program (TRAINER only)
+   */
+  update: (id: string, data: UpdateProgramRequest) =>
+    api.patch<Program>(`/programs/${id}`, data),
+
+  /**
+   * Delete program (TRAINER only)
+   */
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/programs/${id}`),
+
+  /**
+   * Clone a program into trainer ownership
+   */
+  clone: (id: string) =>
+    api.post<Program>(`/programs/${id}/clone`),
+};
+
+// ============================================================================
+// CLIENT PROGRAM ASSIGNMENTS (TRAINER)
+// ============================================================================
+
+export const clientProgramApi = {
+  /**
+   * Assign a program to a client
+   */
+  assign: (clientId: string, data: AssignProgramRequest) =>
+    api.post<ClientProgram>(`/clients/${clientId}/program/assign`, data),
+
+  /**
+   * Get active program assignment for a client
+   */
+  getActive: (clientId: string) =>
+    api.get<ClientProgram>(`/clients/${clientId}/program`),
+
+  /**
+   * Update training days for active program
+   */
+  updateTrainingDays: (clientId: string, data: UpdateTrainingDaysRequest) =>
+    api.patch<ClientProgram>(`/clients/${clientId}/program/days`, data),
+
+  /**
+   * Remove active program assignment
+   */
+  remove: (clientId: string) =>
+    api.delete<{ message: string }>(`/clients/${clientId}/program`),
+};
+
 
 export const todayApi = {
   /**
@@ -211,6 +291,24 @@ export const recommendationApi = {
    */
   delete: (id: string) =>
     api.delete<void>(`/recommendations/${id}`),
+};
+
+// ============================================================================
+// PROGRAM RECOMMENDATIONS & HISTORY (TRAINER)
+// ============================================================================
+
+export const programInsightsApi = {
+  /**
+   * Get AI program recommendations for a client
+   */
+  getRecommendations: (clientId: string) =>
+    api.get<GetRecommendationsResponse>(`/clients/${clientId}/program/recommendations`),
+
+  /**
+   * Get recommendation/selection history timeline
+   */
+  getHistory: (clientId: string) =>
+    api.get<GetProgramHistoryResponse>(`/clients/${clientId}/program/history`),
 };
 
 // ============================================================================

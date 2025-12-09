@@ -31,6 +31,21 @@ export const queryKeys = {
     detail: (id: string) => ['sessions', id] as const,
   },
 
+  // Programs
+  programs: {
+    all: () => ['programs'] as const,
+    detail: (id: string) => ['programs', id] as const,
+  },
+
+  clientPrograms: {
+    active: (clientId: string) => ['clients', clientId, 'program'] as const,
+  },
+
+  programInsights: {
+    recommendations: (clientId: string) => ['clients', clientId, 'program', 'recommendations'] as const,
+    history: (clientId: string) => ['clients', clientId, 'program', 'history'] as const,
+  },
+
   // Check-ins
   checkins: {
     all: (params?: CheckinQueryParams) =>

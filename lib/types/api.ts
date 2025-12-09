@@ -293,3 +293,120 @@ export interface CreateInviteRequest {
   clientLastName?: string;
   expiresInDays?: number;
 }
+
+// ============================================================================
+// PROGRAMS & RECOMMENDATIONS
+// ============================================================================
+
+export type DayOfWeek =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
+
+export type Confidence = "HIGH" | "MEDIUM" | "LOW";
+
+export interface CreateProgramRequest {
+  name: string;
+  description?: string;
+  sessionsPerWeek: number;
+  durationWeeks?: number;
+  sessions: Array<{
+    dayNumber: number;
+    name: string;
+    focus: string;
+    notes?: string;
+  }>;
+}
+
+export type UpdateProgramRequest = Partial<CreateProgramRequest>;
+
+export interface Program {
+  id: string;
+  name: string;
+  description?: string;
+  sessionsPerWeek: number;
+  durationWeeks?: number;
+  isDefault: boolean;
+  trainerId?: string | null;
+  sessions: Array<{
+    id: string;
+    dayNumber: number;
+    name: string;
+    focus: string;
+    notes?: string;
+  }>;
+}
+
+export interface AssignProgramRequest {
+  programId: string;
+  startDate: string;
+  trainingDays: DayOfWeek[];
+  customize?: boolean;
+}
+
+export interface ClientProgram {
+  id: string;
+  clientId: string;
+  programId: string;
+  startDate: string;
+  trainingDays: DayOfWeek[];
+  isCustomized: boolean;
+  active: boolean;
+  program: Program;
+}
+
+export interface UpdateTrainingDaysRequest {
+  trainingDays: DayOfWeek[];
+}
+
+export interface ProgramRecommendation {
+  programId: string;
+  programName: string;
+  score: number;
+  confidence: Confidence;
+  reasons: string[];
+  warnings: string[];
+}
+
+export interface ClientStats {
+  completionRate: number;
+  consistency: number;
+  painFrequency: number;
+  avgNutritionScore: number;
+  weeksSinceStart: number;
+  totalSessions: number;
+  completedSessions: number;
+  cancelledSessions: number;
+  noShowSessions: number;
+}
+
+export interface GetRecommendationsResponse {
+  recommendations: ProgramRecommendation[];
+  currentProgram: ClientProgram | null;
+  clientStats: ClientStats;
+}
+
+export interface ProgramHistoryEntry {
+  date: string;
+  recommended: {
+    programId: string;
+    programName: string;
+    score: number;
+    confidence: Confidence;
+  };
+  selected: {
+    programId: string;
+    programName: string;
+    wasRecommended: boolean;
+  };
+  trainerFeedback?: string | null;
+  clientStats: ClientStats;
+}
+
+export interface GetProgramHistoryResponse {
+  history: ProgramHistoryEntry[];
+}

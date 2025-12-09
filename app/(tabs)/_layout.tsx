@@ -62,9 +62,15 @@ type TabConfig = {
 export default function TabLayout() {
   const role = useAuthStore((s) => s.appUser?.role);
   const tabs: TabConfig[] = [
-    { name: "index", title: "Home", icon: "home" },
+    { name: "index", title: "Home", icon: "home", roles: ["CLIENT"] },
     { name: "workouts", title: "Workouts", icon: "barbell-outline", roles: ["CLIENT"] },
     { name: "clients", title: "Clients", icon: "people", roles: ["TRAINER"] },
+    {
+      name: "programs",
+      title: "Programe",
+      icon: "clipboard-outline",
+      roles: ["TRAINER"],
+    },
     {
       name: "schedule",
       title: "Programări",
