@@ -4,6 +4,7 @@ import { ReactQueryProvider } from '@/lib/providers/react-query-provider';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useProtectedRoute } from '@/lib/hooks/use-protected-route';
 import { LoadingScreen } from '@/components/loading-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
 
 function RootLayoutNav() {
@@ -30,8 +31,10 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ReactQueryProvider>
-      <RootLayoutNav />
-    </ReactQueryProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ReactQueryProvider>
+        <RootLayoutNav />
+      </ReactQueryProvider>
+    </GestureHandlerRootView>
   );
 }

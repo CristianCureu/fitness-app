@@ -19,6 +19,16 @@ export const colors = {
   error: '#EF4444',
   warning: '#FFA726',
 
+  // Session status colors (for badges and status indicators)
+  sessionScheduled: '#60A5FA',      // Blue
+  sessionScheduledBg: '#1e3a5f',    // Dark blue
+  sessionCompleted: '#34D399',      // Green
+  sessionCompletedBg: '#1f3d2b',    // Dark green
+  sessionCancelled: '#F87171',      // Red
+  sessionCancelledBg: '#3a2a2a',    // Dark red
+  sessionNoShow: '#FBBF24',         // Yellow
+  sessionNoShowBg: '#382b1f',       // Dark yellow/orange
+
   // Borders
   border: '#2A2A2A',
   borderLight: '#333333',

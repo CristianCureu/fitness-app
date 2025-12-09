@@ -15,6 +15,14 @@ export interface ApiErrorResponse {
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
+// Paginated Response Type
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 // User & Authentication Types
 export type UserRole = "CLIENT" | "TRAINER";
 
@@ -44,7 +52,7 @@ export interface TrainerProfile {
 }
 
 // Client Profile Types
-export type ClientStatus = "ACTIVE" | "INACTIVE" | "PAUSED";
+export type ClientStatus = "ACTIVE" | "INACTIVE" | "COMPLETED";
 
 export interface ClientProfile {
   id: string;
@@ -82,7 +90,7 @@ export interface CreateClientProfileDto {
 }
 
 // Session Types
-export type SessionStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
+export type SessionStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
 export interface ScheduledSession {
   id: string;
@@ -90,19 +98,30 @@ export interface ScheduledSession {
   startAt: string;
   endAt: string;
   sessionType: string;
+  sessionName: string;
   notes?: string;
   status: SessionStatus;
   createdAt: string;
   updatedAt: string;
+  client?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface CreateSessionDto {
   clientId: string;
   startAt: string;
   endAt: string;
-  sessionType: string;
+  sessionName: string;
+  sessionType?: string;
   notes?: string;
-  status?: SessionStatus;
+  autoRecommended?: boolean;
+}
+
+export interface UpdateSessionStatusDto {
+  status: SessionStatus;
 }
 
 // Check-in Types

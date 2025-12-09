@@ -15,10 +15,12 @@ import type {
   NutritionGoal,
   NutritionGoalQueryParams,
   OnboardingStatus,
+  PaginatedResponse,
   RecommendationQueryParams,
   RegisterRequest,
   ScheduledSession,
   SessionQueryParams,
+  SessionStatus,
   TodayView,
   UserRole,
   ValidateInviteRequest,
@@ -69,8 +71,8 @@ export const clientApi = {
    * TRAINER: all their clients
    * CLIENT: just themselves
    */
-  getAll: () =>
-    api.get<ClientProfile[]>('/clients'),
+  getAll: (params?: { search?: string; status?: string; offset?: number; limit?: number }) =>
+    api.get<PaginatedResponse<ClientProfile>>(`/clients${buildQueryString(params || {})}`),
 
   /**
    * Get single client by ID
@@ -105,13 +107,20 @@ export const scheduleApi = {
    * CLIENT: only sees their own sessions
    */
   getSessions: (params?: SessionQueryParams) =>
-    api.get<ScheduledSession[]>(`/schedule/sessions${buildQueryString(params || {})}`),
+    api.get<PaginatedResponse<ScheduledSession>>(`/schedule/sessions${buildQueryString(params || {})}`),
 
   /**
    * Update session (TRAINER only)
    */
   updateSession: (id: string, data: Partial<CreateSessionDto>) =>
     api.patch<ScheduledSession>(`/schedule/sessions/${id}`, data),
+
+  /**
+   * Update session status (TRAINER and CLIENT)
+   * Lightweight endpoint for status-only updates
+   */
+  updateSessionStatus: (id: string, status: SessionStatus) =>
+    api.patch<ScheduledSession>(`/schedule/sessions/${id}/status`, { status }),
 
   /**
    * Delete session (TRAINER only)

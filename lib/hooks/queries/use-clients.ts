@@ -8,10 +8,10 @@ import type { CreateClientProfileDto } from '@/lib/types/api';
  * TRAINER: all their clients
  * CLIENT: just themselves
  */
-export function useClients() {
+export function useClients(params?: { search?: string; status?: string; offset?: number; limit?: number }) {
   return useQuery({
-    queryKey: queryKeys.clients.all(),
-    queryFn: () => clientApi.getAll(),
+    queryKey: queryKeys.clients.all(params),
+    queryFn: () => clientApi.getAll(params),
   });
 }
 

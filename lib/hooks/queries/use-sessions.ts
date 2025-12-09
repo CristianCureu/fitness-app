@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scheduleApi } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { CreateSessionDto, SessionQueryParams } from '@/lib/types/api';
+import type { CreateSessionDto, SessionQueryParams, SessionStatus } from '@/lib/types/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Get all sessions with optional filters
@@ -37,6 +37,24 @@ export function useUpdateSession() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateSessionDto> }) =>
       scheduleApi.updateSession(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.today.all() });
+    },
+  });
+}
+
+/**
+ * Update session status only (TRAINER and CLIENT)
+ * Lightweight mutation for status-only updates
+ */
+export function useUpdateSessionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: SessionStatus }) => {
+      return scheduleApi.updateSessionStatus(id, status);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.today.all() });

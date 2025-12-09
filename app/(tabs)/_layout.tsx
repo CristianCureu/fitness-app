@@ -56,14 +56,27 @@ type TabConfig = {
   title: string;
   icon: IoniconName;
   roles?: UserRole[];
+  hidden?: boolean;
 };
 
 export default function TabLayout() {
   const role = useAuthStore((s) => s.appUser?.role);
   const tabs: TabConfig[] = [
     { name: "index", title: "Home", icon: "home" },
-    { name: "workouts", title: "Workouts", icon: "barbell-outline" },
-    { name: "invites", title: "Clients", icon: "people", roles: ["TRAINER"] },
+    { name: "workouts", title: "Workouts", icon: "barbell-outline", roles: ["CLIENT"] },
+    { name: "clients", title: "Clients", icon: "people", roles: ["TRAINER"] },
+    {
+      name: "schedule",
+      title: "Programări",
+      icon: "calendar-outline",
+      roles: ["TRAINER"],
+    },
+    {
+      name: "invites",
+      title: "Invites",
+      icon: "mail-unread-outline",
+      roles: ["TRAINER"],
+    },
     { name: "profile", title: "Profile", icon: "person" },
   ];
 
@@ -109,11 +122,12 @@ export default function TabLayout() {
             options={{
               title: tab.title,
               href: isAllowed ? undefined : null,
-              tabBarIcon: isAllowed
-                ? ({ color, focused }) => (
-                    <TabIcon name={tab.icon} color={color} focused={focused} />
-                  )
-                : undefined,
+              tabBarIcon:
+                isAllowed && !tab.hidden
+                  ? ({ color, focused }) => (
+                      <TabIcon name={tab.icon} color={color} focused={focused} />
+                    )
+                  : undefined,
             }}
           />
         );

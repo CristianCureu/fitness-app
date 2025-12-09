@@ -19,33 +19,38 @@ export const queryKeys = {
 
   // Client profiles
   clients: {
-    all: () => ['clients'] as const,
+    all: (params?: { search?: string; status?: string; offset?: number; limit?: number }) =>
+      params ? ['clients', params] as const : ['clients'] as const,
     detail: (id: string) => ['clients', id] as const,
   },
 
   // Sessions
   sessions: {
-    all: (params?: SessionQueryParams) => ['sessions', params] as const,
+    all: (params?: SessionQueryParams) =>
+      params ? ['sessions', params] as const : ['sessions'] as const,
     detail: (id: string) => ['sessions', id] as const,
   },
 
   // Check-ins
   checkins: {
-    all: (params?: CheckinQueryParams) => ['checkins', params] as const,
+    all: (params?: CheckinQueryParams) =>
+      params ? ['checkins', params] as const : ['checkins'] as const,
     detail: (id: string) => ['checkins', id] as const,
     today: () => ['checkins', 'today'] as const,
   },
 
   // Recommendations
   recommendations: {
-    all: (params?: RecommendationQueryParams) => ['recommendations', params] as const,
+    all: (params?: RecommendationQueryParams) =>
+      params ? ['recommendations', params] as const : ['recommendations'] as const,
     detail: (id: string) => ['recommendations', id] as const,
     today: () => ['recommendations', 'today'] as const,
   },
 
   // Nutrition
   nutrition: {
-    all: (params?: NutritionGoalQueryParams) => ['nutrition', params] as const,
+    all: (params?: NutritionGoalQueryParams) =>
+      params ? ['nutrition', params] as const : ['nutrition'] as const,
     detail: (id: string) => ['nutrition', id] as const,
     current: () => ['nutrition', 'current'] as const,
   },
