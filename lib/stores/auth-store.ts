@@ -76,7 +76,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (session) {
           try {
             const appUser = await userApi.getMe();
-            console.log('User:', appUser);
             set({ appUser });
           } catch (error) {
             console.error('Failed to fetch app user:', error);

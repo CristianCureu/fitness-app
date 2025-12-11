@@ -1,9 +1,15 @@
+import { EditProgramModal } from "@/components/programs";
 import { Button } from "@/components/ui/button";
-import type { ClientProfile, ClientProgram, DayOfWeek } from "@/lib/types/api";
+import type {
+  ClientProfile,
+  ClientProgram,
+  DayOfWeek,
+  UpdateProgramRequest,
+} from "@/lib/types/api";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Text, View } from "react-native";
 import { Section } from "./Section";
 
 const DAY_LABELS: Record<DayOfWeek, string> = {
@@ -20,103 +26,25 @@ interface ActiveProgramSectionProps {
   client: ClientProfile;
   activeProgram?: ClientProgram | null;
   onAssignPress: () => void;
-  onUpdateTrainingDays: (days: DayOfWeek[]) => void;
-  updatingDays?: boolean;
+  onUpdateProgram: (data: UpdateProgramRequest, trainingDays?: DayOfWeek[]) => void;
+  updatingProgram?: boolean;
   onRemove?: () => void;
   removing?: boolean;
-}
-
-function TrainingDaysModal({
-  visible,
-  onClose,
-  initialDays,
-  onSave,
-  loading,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  initialDays: DayOfWeek[];
-  onSave: (days: DayOfWeek[]) => void;
-  loading?: boolean;
-}) {
-  const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(initialDays);
-
-  useEffect(() => {
-    if (visible) setSelectedDays(initialDays);
-  }, [visible, initialDays]);
-
-  const toggleDay = (day: DayOfWeek) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="fade">
-      <Pressable className="flex-1 bg-black/50 justify-center px-6" onPress={onClose}>
-        <Pressable
-          className="bg-surface border border-border rounded-2xl p-5"
-          onPress={(e) => e.stopPropagation()}
-        >
-          <Text className="text-text-primary text-lg font-semibold mb-3">
-            Ajustează zilele de antrenament
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {(Object.keys(DAY_LABELS) as DayOfWeek[]).map((day) => {
-              const isActive = selectedDays.includes(day);
-              return (
-                <Pressable
-                  key={day}
-                  onPress={() => toggleDay(day)}
-                  className={`px-3 py-2 rounded-full border ${
-                    isActive
-                      ? "border-primary/70 bg-primary/15"
-                      : "border-border bg-background"
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-semibold ${
-                      isActive ? "text-primary" : "text-text-secondary"
-                    }`}
-                  >
-                    {DAY_LABELS[day]}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View className="flex-row gap-3 mt-4">
-            <Button
-              label="Salvează"
-              onPress={() => onSave(selectedDays)}
-              loading={loading}
-              disabled={!selectedDays.length}
-              className="flex-1"
-            />
-            <Button label="Anulează" variant="ghost" onPress={onClose} className="flex-1" />
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
 }
 
 export function ActiveProgramSection({
   client,
   activeProgram,
   onAssignPress,
-  onUpdateTrainingDays,
-  updatingDays,
+  onUpdateProgram,
+  updatingProgram,
   onRemove,
   removing,
 }: ActiveProgramSectionProps) {
-  const [showEditDays, setShowEditDays] = useState(false);
+  const [showEditProgram, setShowEditProgram] = useState(false);
   const sessions = activeProgram
     ? [...activeProgram?.program?.sessions].sort((a, b) => a.dayNumber - b.dayNumber)
     : [];
-
-    console.log(activeProgram, "active")
 
   return (
     <Section title="Program activ">
@@ -155,7 +83,9 @@ export function ActiveProgramSection({
                 key={day}
                 className="px-3 py-2 rounded-full bg-primary/10 border border-primary/30"
               >
-                <Text className="text-primary text-xs font-semibold">{DAY_LABELS[day]}</Text>
+                <Text className="text-primary text-xs font-semibold">
+                  {DAY_LABELS[day]}
+                </Text>
               </View>
             ))}
           </View>
@@ -173,13 +103,19 @@ export function ActiveProgramSection({
                 className="flex-row items-start gap-3 py-2 border-b border-border/60 last:border-0"
               >
                 <View className="w-9 h-9 rounded-xl bg-surface border border-border items-center justify-center">
-                  <Text className="text-primary font-semibold">Zi {session.dayNumber}</Text>
+                  <Text className="text-primary font-semibold">
+                    Zi {session.dayNumber}
+                  </Text>
                 </View>
                 <View className="flex-1">
                   <Text className="text-text-primary font-semibold">{session.name}</Text>
-                  <Text className="text-text-secondary text-xs mt-1">{session.focus}</Text>
+                  <Text className="text-text-secondary text-xs mt-1">
+                    {session.focus}
+                  </Text>
                   {session.notes ? (
-                    <Text className="text-text-muted text-[11px] mt-1">{session.notes}</Text>
+                    <Text className="text-text-muted text-[11px] mt-1">
+                      {session.notes}
+                    </Text>
                   ) : null}
                 </View>
               </View>
@@ -194,10 +130,10 @@ export function ActiveProgramSection({
               className="flex-1"
             />
             <Button
-              label="Ajustează zilele"
+              label="Ajustează program"
               variant="secondary"
-              onPress={() => setShowEditDays(true)}
-              loading={updatingDays}
+              onPress={() => setShowEditProgram(true)}
+              loading={updatingProgram}
               className="flex-1"
             />
           </View>
@@ -226,15 +162,17 @@ export function ActiveProgramSection({
       )}
 
       {activeProgram && (
-        <TrainingDaysModal
-          visible={showEditDays}
-          onClose={() => setShowEditDays(false)}
-          initialDays={activeProgram.trainingDays}
-          onSave={(days) => {
-            onUpdateTrainingDays(days);
-            setShowEditDays(false);
+        <EditProgramModal
+          visible={showEditProgram}
+          onClose={() => setShowEditProgram(false)}
+          program={activeProgram.program}
+          trainingDays={activeProgram.trainingDays}
+          showTrainingDays
+          onSave={(data, trainingDays) => {
+            onUpdateProgram(data, trainingDays);
+            setShowEditProgram(false);
           }}
-          loading={updatingDays}
+          loading={updatingProgram}
         />
       )}
     </Section>

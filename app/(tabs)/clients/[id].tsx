@@ -17,9 +17,10 @@ import {
   useProgramRecommendations,
   usePrograms,
   useRemoveProgramAssignment,
+  useUpdateProgram,
   useUpdateTrainingDays,
 } from "@/lib/hooks/queries/use-programs";
-import type { DayOfWeek, Program } from "@/lib/types/api";
+import type { DayOfWeek, Program, UpdateProgramRequest } from "@/lib/types/api";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
@@ -33,7 +34,8 @@ export default function ClientDetailsScreen() {
   const recommendationsQuery = useProgramRecommendations(clientId);
   const historyQuery = useProgramHistory(clientId);
   const assignProgramMutation = useAssignProgram();
-  const updateDaysMutation = useUpdateTrainingDays();
+  const updateProgramMutation = useUpdateProgram();
+  const updateTrainingDaysMutation = useUpdateTrainingDays();
   const removeProgramMutation = useRemoveProgramAssignment();
 
   const [selectedProgram, setSelectedProgram] = useState<{
@@ -48,8 +50,6 @@ export default function ClientDetailsScreen() {
   const client = clientQuery.data;
   const activeProgram =
     activeProgramQuery.data || recommendationsQuery.data?.currentProgram || null;
-
-    console.log(activeProgram)
 
   if (!clientId) {
     return (
@@ -121,21 +121,34 @@ export default function ClientDetailsScreen() {
     setShowAssignModal(true);
   };
 
-  const handleUpdateTrainingDays = (trainingDays: DayOfWeek[]) => {
-    if (!clientId) return;
-    updateDaysMutation.mutate(
-      { clientId, data: { trainingDays } },
+  const handleUpdateProgram = (data: UpdateProgramRequest, trainingDays?: DayOfWeek[]) => {
+    if (!activeProgram?.program.id || !clientId) return;
+
+    // Update program details
+    updateProgramMutation.mutate(
+      { id: activeProgram.program.id, data },
       {
-        onError: (error) => {
-          Alert.alert("Eroare", error.message || "Nu am putut actualiza zilele.");
+        onSuccess: () => {
+          // If training days were also changed, update them
+          if (trainingDays && trainingDays.length > 0) {
+            updateTrainingDaysMutation.mutate(
+              { clientId, data: { trainingDays } },
+              {
+                onError: (error: any) => {
+                  Alert.alert("Eroare", error.message || "Nu am putut actualiza zilele de antrenament.");
+                },
+              }
+            );
+          }
+        },
+        onError: (error: any) => {
+          Alert.alert("Eroare", error.message || "Nu am putut actualiza programul.");
         },
       }
     );
   };
 
   const handleRemoveProgram = () => {
-    console.log("called");
-
     if (!clientId) return;
 
     removeProgramMutation.mutate(clientId, {
@@ -160,8 +173,8 @@ export default function ClientDetailsScreen() {
             setShowProgramPicker(true);
             setDefaultCustomize(false);
           }}
-          onUpdateTrainingDays={handleUpdateTrainingDays}
-          updatingDays={updateDaysMutation.isPending}
+          onUpdateProgram={handleUpdateProgram}
+          updatingProgram={updateProgramMutation.isPending || updateTrainingDaysMutation.isPending}
           onRemove={activeProgram ? handleRemoveProgram : undefined}
           removing={removeProgramMutation.isPending}
         />

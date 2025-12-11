@@ -95,6 +95,7 @@ export function SessionCard({ session, onPress, onStatusChange, onDelete }: Sess
 
   const translateX = useSharedValue(0);
   const SWIPE_THRESHOLD = -80;
+  const isSwipeActive = useSharedValue(false);
 
   const handleLongPress = () => {
     setShowStatusMenu(true);
@@ -109,7 +110,19 @@ export function SessionCard({ session, onPress, onStatusChange, onDelete }: Sess
 
   const handleDeletePress = () => {
     translateX.value = withSpring(0);
+    isSwipeActive.value = false;
     onDelete();
+  };
+
+  const handlePress = () => {
+    // Only allow press when card is not swiped open
+    if (translateX.value === 0 && !isSwipeActive.value) {
+      onPress();
+    } else if (translateX.value < 0) {
+      // If card is swiped open, close it instead of opening modal
+      translateX.value = withSpring(0);
+      isSwipeActive.value = false;
+    }
   };
 
   const contextX = useSharedValue(0);
@@ -121,6 +134,7 @@ export function SessionCard({ session, onPress, onStatusChange, onDelete }: Sess
       contextX.value = translateX.value;
     })
     .onUpdate((event) => {
+      isSwipeActive.value = true;
       translateX.value = Math.min(0, Math.max(contextX.value + event.translationX, SWIPE_THRESHOLD));
     })
     .onEnd(() => {
@@ -128,6 +142,7 @@ export function SessionCard({ session, onPress, onStatusChange, onDelete }: Sess
         translateX.value = withSpring(SWIPE_THRESHOLD);
       } else {
         translateX.value = withSpring(0);
+        isSwipeActive.value = false;
       }
     });
 
@@ -150,7 +165,7 @@ export function SessionCard({ session, onPress, onStatusChange, onDelete }: Sess
         <GestureDetector gesture={panGesture}>
           <Animated.View style={animatedStyle}>
             <Pressable
-              onPress={onPress}
+              onPress={handlePress}
               onLongPress={handleLongPress}
               className="bg-surface border border-border rounded-2xl p-4"
             >

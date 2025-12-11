@@ -40,8 +40,18 @@ export function useUpdateProgram() {
     mutationFn: ({ id, data }: { id: string; data: UpdateProgramRequest }) =>
       programApi.update(id, data),
     onSuccess: (_, variables) => {
+      // Invalidate all program-related queries
       queryClient.invalidateQueries({ queryKey: queryKeys.programs.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(variables.id) });
+      // Force refetch all client programs since they might have this program assigned
+      queryClient.invalidateQueries({
+        queryKey: ['clients'],
+        refetchType: 'active',
+        predicate: (query) => {
+          // Match any query that includes 'program' (covers active programs, recommendations, history)
+          return query.queryKey.includes('program');
+        }
+      });
     },
   });
 }
@@ -86,6 +96,8 @@ export function useAssignProgram() {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientPrograms.active(variables.clientId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.programInsights.recommendations(variables.clientId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.programInsights.history(variables.clientId) });
+      // Invalidate programs list in case a personalized program was created
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all() });
     },
   });
 }

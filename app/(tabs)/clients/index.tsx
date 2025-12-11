@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useClients } from "@/lib/hooks/queries/use-clients";
 import { useAppUser } from "@/lib/stores/auth-store";
 import { router } from "expo-router";
-import { debounce } from "lodash";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
 
 export default function ClientsScreen() {
@@ -19,18 +18,13 @@ export default function ClientsScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
-  const debouncedSetSearch = useRef(
-    debounce((value: string) => {
-      setDebouncedSearch(value.trim());
-    }, 300)
-  ).current;
-
   useEffect(() => {
-    debouncedSetSearch(searchInput);
-    return () => {
-      debouncedSetSearch.cancel();
-    };
-  }, [searchInput, debouncedSetSearch]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const buildQueryParams = () => {
     const params: { search?: string; status?: string } = {};

@@ -105,7 +105,6 @@ export default function ScheduleScreen() {
   const handleSaveSession = (data: CreateSessionDto) => {
     if (editingSession) {
       const { clientId, ...dataToSend } = data;
-      console.log(dataToSend)
       updateSessionMutation.mutate(
         { id: editingSession.id, data: dataToSend },
         {

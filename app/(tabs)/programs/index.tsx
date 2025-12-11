@@ -1,12 +1,13 @@
-import { AssignProgramModal, ProgramCard } from "@/components/programs";
+import { AssignProgramModal, EditProgramModal, ProgramCard } from "@/components/programs";
 import { useClients } from "@/lib/hooks/queries/use-clients";
 import {
   useAssignProgram,
-  useCloneProgram,
+  useDeleteProgram,
   usePrograms,
+  useUpdateProgram
 } from "@/lib/hooks/queries/use-programs";
 import { useAppUser } from "@/lib/stores/auth-store";
-import type { DayOfWeek, Program } from "@/lib/types/api";
+import type { DayOfWeek, Program, UpdateProgramRequest } from "@/lib/types/api";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
@@ -23,13 +24,15 @@ export default function ProgramsScreen() {
   const programsQuery = usePrograms();
   const clientsQuery = useClients();
   const assignProgramMutation = useAssignProgram();
-  const cloneProgramMutation = useCloneProgram();
+  const deleteProgramMutation = useDeleteProgram();
+  const updateProgramMutation = useUpdateProgram();
 
   const programs = programsQuery.data || [];
   const clients = clientsQuery.data?.data || [];
 
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const trainerName =
     appUser?.trainerProfile?.firstName || appUser?.clientProfile?.firstName || "Trainer";
@@ -65,12 +68,33 @@ export default function ProgramsScreen() {
     );
   };
 
-  const handleCloneProgram = (program: Program) => {
-    cloneProgramMutation.mutate(program.id, {
+  const handleDeleteProgram = (program: Program) => {
+    deleteProgramMutation.mutate(program.id, {
       onError: (error) => {
-        Alert.alert("Eroare", error.message || "Nu am putut clona programul.");
+        Alert.alert("Eroare", error.message || "Nu am putut sterge programul.");
       },
     });
+  };
+
+  const handleEditPress = (program: Program) => {
+    setSelectedProgram(program);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateProgram = (data: UpdateProgramRequest) => {
+    if (!selectedProgram) return;
+    updateProgramMutation.mutate(
+      { id: selectedProgram.id, data },
+      {
+        onSuccess: () => {
+          setShowEditModal(false);
+          setSelectedProgram(null);
+        },
+        onError: (error) => {
+          Alert.alert("Eroare", error.message || "Nu am putut actualiza programul.");
+        },
+      }
+    );
   };
 
   const isRefreshing = programsQuery.isRefetching || clientsQuery.isRefetching;
@@ -124,6 +148,8 @@ export default function ProgramsScreen() {
                 key={program.id}
                 program={program}
                 onAssign={handleAssignPress}
+                onDelete={handleDeleteProgram}
+                onEdit={handleEditPress}
               />
             ))
           ) : (
@@ -151,6 +177,17 @@ export default function ProgramsScreen() {
         clients={clients}
         onConfirm={handleAssignConfirm}
         loading={assignProgramMutation.isPending}
+      />
+
+      <EditProgramModal
+        visible={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedProgram(null);
+        }}
+        program={selectedProgram || undefined}
+        onSave={(data) => handleUpdateProgram(data)}
+        loading={updateProgramMutation.isPending}
       />
     </>
   );
