@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import FormInput from "@/components/ui/form-input";
-import type { DayOfWeek, Program, UpdateProgramRequest } from "@/lib/types/api";
+import type { DayOfWeek, Program, UpdateProgramRequest, Exercise, SessionExercise } from "@/lib/types/api";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { ExerciseSearchDropdown } from "./ExerciseSearchDropdown";
 
 const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
   { value: "MONDAY", label: "Lu" },
@@ -24,6 +25,15 @@ interface ProgramFormData {
     name: string;
     focus: string;
     notes: string;
+    exercises: Array<{
+      id?: string;
+      exerciseId: string;
+      orderIndex: number;
+      sets?: number;
+      reps?: string;
+      notes?: string;
+      exercise?: Exercise;
+    }>;
   }>;
 }
 
@@ -54,6 +64,8 @@ export function EditProgramModal({
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ProgramFormData>({
     defaultValues: {
@@ -64,6 +76,15 @@ export function EditProgramModal({
         name: s.name,
         focus: s.focus,
         notes: s.notes || "",
+        exercises: s.exercises?.map((ex, idx) => ({
+          id: ex.id,
+          exerciseId: ex.exerciseId,
+          orderIndex: ex.orderIndex ?? idx,
+          sets: ex.sets,
+          reps: ex.reps,
+          notes: ex.notes,
+          exercise: ex.exercise,
+        })) || [],
       })) || [],
     },
   });
@@ -78,6 +99,15 @@ export function EditProgramModal({
           name: s.name,
           focus: s.focus,
           notes: s.notes || "",
+          exercises: s.exercises?.map((ex, idx) => ({
+            id: ex.id,
+            exerciseId: ex.exerciseId,
+            orderIndex: ex.orderIndex ?? idx,
+            sets: ex.sets,
+            reps: ex.reps,
+            notes: ex.notes,
+            exercise: ex.exercise,
+          })) || [],
         })),
       });
       setSelectedDays(initialTrainingDays || []);
@@ -95,6 +125,28 @@ export function EditProgramModal({
     setSelectedDays(ordered);
   };
 
+  const addExercise = (sessionIndex: number) => {
+    const currentExercises = watch(`sessions.${sessionIndex}.exercises`) || [];
+    setValue(`sessions.${sessionIndex}.exercises`, [
+      ...currentExercises,
+      {
+        exerciseId: "",
+        orderIndex: currentExercises.length,
+        sets: undefined,
+        reps: undefined,
+        notes: undefined,
+      },
+    ]);
+  };
+
+  const removeExercise = (sessionIndex: number, exerciseIndex: number) => {
+    const currentExercises = watch(`sessions.${sessionIndex}.exercises`) || [];
+    const updated = currentExercises.filter((_, idx) => idx !== exerciseIndex);
+    // Re-index remaining exercises
+    const reindexed = updated.map((ex, idx) => ({ ...ex, orderIndex: idx }));
+    setValue(`sessions.${sessionIndex}.exercises`, reindexed);
+  };
+
   const onSubmit = (formData: ProgramFormData) => {
     const data: UpdateProgramRequest = {
       name: formData.name,
@@ -104,6 +156,15 @@ export function EditProgramModal({
         name: s.name,
         focus: s.focus,
         notes: s.notes || undefined,
+        exercises: s.exercises
+          ?.filter((ex) => ex.exerciseId) // Only include exercises with selected exercise
+          .map((ex) => ({
+            exerciseId: ex.exerciseId,
+            orderIndex: ex.orderIndex,
+            sets: ex.sets,
+            reps: ex.reps || undefined,
+            notes: ex.notes || undefined,
+          })),
       })),
     };
     onSave(data, showTrainingDays ? selectedDays : undefined);
@@ -271,9 +332,123 @@ export function EditProgramModal({
                         numberOfLines={2}
                         textAlignVertical="top"
                         style={{ minHeight: 60 }}
+                        containerClassName="mb-3"
                       />
                     )}
                   />
+
+                  {/* Exercises Section - Only for custom programs */}
+                  {!program.isDefault && (
+                    <View>
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-xs font-semibold text-text-muted tracking-[1px]">
+                          EXERCIȚII
+                        </Text>
+                        <Pressable
+                          onPress={() => addExercise(index)}
+                          className="flex-row items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 border border-primary/30"
+                        >
+                          <Ionicons name="add" size={16} color="#f798af" />
+                          <Text className="text-primary text-xs font-semibold">
+                            Adaugă
+                          </Text>
+                        </Pressable>
+                      </View>
+
+                      {watch(`sessions.${index}.exercises`)?.map((_, exIndex) => (
+                        <View
+                          key={exIndex}
+                          className="bg-background rounded-xl p-3 mb-2 border border-border"
+                        >
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text className="text-text-secondary text-xs font-semibold">
+                              Exercițiu {exIndex + 1}
+                            </Text>
+                            <Pressable
+                              onPress={() => removeExercise(index, exIndex)}
+                              className="p-1"
+                            >
+                              <Ionicons name="close-circle" size={20} color="#EF4444" />
+                            </Pressable>
+                          </View>
+
+                          <Controller
+                            control={control}
+                            name={`sessions.${index}.exercises.${exIndex}.exercise`}
+                            rules={{ required: "Selectează un exercițiu" }}
+                            render={({ field: { onChange, value } }) => (
+                              <ExerciseSearchDropdown
+                                value={value}
+                                onChange={(exercise) => {
+                                  onChange(exercise);
+                                  setValue(`sessions.${index}.exercises.${exIndex}.exerciseId`, exercise.id);
+                                }}
+                                placeholder="Caută exercițiu..."
+                                error={errors.sessions?.[index]?.exercises?.[exIndex]?.exercise?.message}
+                              />
+                            )}
+                          />
+
+                          <View className="flex-row gap-2 mt-2">
+                            <Controller
+                              control={control}
+                              name={`sessions.${index}.exercises.${exIndex}.sets`}
+                              render={({ field: { onChange, value } }) => (
+                                <FormInput
+                                  label="SETURI"
+                                  value={value?.toString() || ""}
+                                  onChangeText={(text) => onChange(text ? parseInt(text) : undefined)}
+                                  placeholder="3"
+                                  keyboardType="number-pad"
+                                  containerClassName="flex-1"
+                                />
+                              )}
+                            />
+
+                            <Controller
+                              control={control}
+                              name={`sessions.${index}.exercises.${exIndex}.reps`}
+                              render={({ field: { onChange, value } }) => (
+                                <FormInput
+                                  label="REPETĂRI"
+                                  value={value || ""}
+                                  onChangeText={onChange}
+                                  placeholder="8-12"
+                                  containerClassName="flex-1"
+                                />
+                              )}
+                            />
+                          </View>
+
+                          <Controller
+                            control={control}
+                            name={`sessions.${index}.exercises.${exIndex}.notes`}
+                            render={({ field: { onChange, value } }) => (
+                              <FormInput
+                                label="NOTE (OPȚIONAL)"
+                                value={value || ""}
+                                onChangeText={onChange}
+                                placeholder="Note despre exercițiu..."
+                                multiline
+                                numberOfLines={2}
+                                textAlignVertical="top"
+                                style={{ minHeight: 50 }}
+                                containerClassName="mt-2"
+                              />
+                            )}
+                          />
+                        </View>
+                      ))}
+
+                      {(!watch(`sessions.${index}.exercises`) || watch(`sessions.${index}.exercises`)?.length === 0) && (
+                        <View className="py-4 items-center">
+                          <Text className="text-text-muted text-xs">
+                            Nu există exerciții adăugate
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </View>
               ))}
             </View>

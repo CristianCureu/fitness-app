@@ -3,6 +3,8 @@ import type {
   CheckinQueryParams,
   RecommendationQueryParams,
   NutritionGoalQueryParams,
+  ExerciseSearchParams,
+  ExerciseRecommendedParams,
 } from '../types/api';
 
 export const queryKeys = {
@@ -84,5 +86,14 @@ export const queryKeys = {
   invites: {
     all: () => ['invites'] as const,
     detail: (id: string) => ['invites', id] as const,
+  },
+
+  // Exercises
+  exercises: {
+    search: (params?: ExerciseSearchParams) =>
+      params ? ['exercises', 'search', params] as const : ['exercises', 'search'] as const,
+    recommended: (params?: ExerciseRecommendedParams) =>
+      params ? ['exercises', 'recommended', params] as const : ['exercises', 'recommended'] as const,
+    detail: (id: string) => ['exercises', id] as const,
   },
 } as const;

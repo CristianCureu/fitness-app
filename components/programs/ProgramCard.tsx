@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Button } from "../ui/button";
+import { ExerciseInfoModal } from "./ExerciseInfoModal";
 
 type ProgramCardProps = {
   program: Program;
@@ -22,6 +23,7 @@ const DAY_BADGES = ["A", "B", "C", "D", "E", "F", "G"];
 
 export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExerciseModalVisible, setIsExerciseModalVisible] = useState(false);
   const badgeLabel = program.isDefault ? "template" : "Personalizat";
   const sessions = [...program.sessions].sort((a, b) => a.dayNumber - b.dayNumber);
 
@@ -31,6 +33,7 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
   const expandHeight = useSharedValue(0);
   const expandOpacity = useSharedValue(0);
   const rotateChevron = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
 
   const handlePress = () => {
     // Only allow press when card is not swiped open
@@ -88,9 +91,9 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
   }));
 
   const expandAnimatedStyle = useAnimatedStyle(() => ({
-    maxHeight: expandHeight.value * 500, // Adjust max height as needed
+    height: expandHeight.value * Math.max(contentHeight.value, 1),
     opacity: expandOpacity.value,
-    overflow: 'hidden',
+    overflow: "hidden",
   }));
 
   const chevronAnimatedStyle = useAnimatedStyle(() => ({
@@ -170,7 +173,12 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
             </Pressable>
 
             <Animated.View style={expandAnimatedStyle}>
-              <View className="mt-3 border-t border-border/60 pt-3">
+              <View
+                className="mt-3 border-t border-border/60 pt-3"
+                onLayout={(e) => {
+                  contentHeight.value = e.nativeEvent.layout.height;
+                }}
+              >
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-text-secondary text-xs uppercase tracking-wider">
                     Structură
@@ -181,28 +189,76 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
                 </View>
 
                 {sessions.map((session, index) => (
-                  <View key={session.id} className="flex-row items-start gap-3 py-2">
-                    <View className="w-9 h-9 rounded-xl bg-background border border-border items-center justify-center">
-                      <Text className="text-primary font-semibold">
-                        {DAY_BADGES[index] || session.dayNumber}
-                      </Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-text-primary font-semibold">
-                        {session.name}
-                      </Text>
-                      <Text className="text-text-secondary text-xs mt-1">
-                        {session.focus}
-                      </Text>
-                      {session.notes ? (
-                        <Text className="text-text-muted text-[11px] mt-1">
-                          {session.notes}
+                  <View key={session.id} className="py-2">
+                    <View className="flex-row items-start gap-3">
+                      <View className="w-9 h-9 rounded-xl bg-background border border-border items-center justify-center">
+                        <Text className="text-primary font-semibold">
+                          {DAY_BADGES[index] || session.dayNumber}
                         </Text>
-                      ) : null}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-text-primary font-semibold">
+                          {session.name}
+                        </Text>
+                        <Text className="text-text-secondary text-xs mt-1">
+                          {session.focus}
+                        </Text>
+                        {session.notes ? (
+                          <Text className="text-text-muted text-[11px] mt-1">
+                            {session.notes}
+                          </Text>
+                        ) : null}
+                        {/* Exercise List */}
+                        {session.sessionExercises &&
+                          session.sessionExercises.length > 0 && (
+                            <View className="ml-1">
+                              {session.sessionExercises.map((sessionExercise, exIdx) => (
+                                <View
+                                  key={sessionExercise.id}
+                                  className="flex-row items-start gap-2 py-1"
+                                >
+                                  <Text className="text-text-muted text-xs mt-0.5">
+                                    {exIdx + 1}.
+                                  </Text>
+                                  <Pressable
+                                    className="flex-1"
+                                    onPress={() => setIsExerciseModalVisible(true)}
+                                  >
+                                    <Text className="text-text-primary text-xs">
+                                      {sessionExercise.exercise?.name || "Exercițiu"}
+                                    </Text>
+                                    {(sessionExercise.sets || sessionExercise.reps) && (
+                                      <Text className="text-text-muted text-[11px]">
+                                        {sessionExercise.sets &&
+                                          `${sessionExercise.sets} seturi`}
+                                        {sessionExercise.sets &&
+                                          sessionExercise.reps &&
+                                          " • "}
+                                        {sessionExercise.reps &&
+                                          `${sessionExercise.reps} reps`}
+                                      </Text>
+                                    )}
+                                  </Pressable>
+
+                                  <View>
+                                    {session.sessionExercises?.map((e) => (
+                                      <ExerciseInfoModal
+                                        key={e.id}
+                                        exercise={e.exercise}
+                                        onClose={() => setIsExerciseModalVisible(false)}
+                                        visible={isExerciseModalVisible}
+                                      />
+                                    ))}
+                                  </View>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                      </View>
+                      <Text className="text-text-muted text-xs mt-1">
+                        Ziua {session.dayNumber}
+                      </Text>
                     </View>
-                    <Text className="text-text-muted text-xs mt-1">
-                      Ziua {session.dayNumber}
-                    </Text>
                   </View>
                 ))}
               </View>

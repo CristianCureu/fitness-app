@@ -319,10 +319,26 @@ export interface CreateProgramRequest {
     name: string;
     focus: string;
     notes?: string;
+    exercises?: Array<{
+      exerciseId: string;
+      orderIndex: number;
+      sets?: number;
+      reps?: string;
+      notes?: string;
+    }>;
   }>;
 }
 
 export type UpdateProgramRequest = Partial<CreateProgramRequest>;
+
+export interface ProgramSession {
+  id: string;
+  dayNumber: number;
+  name: string;
+  focus: string;
+  notes?: string;
+  sessionExercises?: SessionExercise[];
+}
 
 export interface Program {
   id: string;
@@ -332,13 +348,7 @@ export interface Program {
   durationWeeks?: number;
   isDefault: boolean;
   trainerId?: string | null;
-  sessions: Array<{
-    id: string;
-    dayNumber: number;
-    name: string;
-    focus: string;
-    notes?: string;
-  }>;
+  sessions: ProgramSession[];
 }
 
 export interface AssignProgramRequest {
@@ -409,4 +419,89 @@ export interface ProgramHistoryEntry {
 
 export interface GetProgramHistoryResponse {
   history: ProgramHistoryEntry[];
+}
+
+
+// ============================================================================
+// EXERCISES
+// ============================================================================
+
+export type ExerciseCategory =
+  | "SQUAT"
+  | "HINGE"
+  | "HORIZONTAL_PUSH"
+  | "HORIZONTAL_PULL"
+  | "VERTICAL_PUSH"
+  | "VERTICAL_PULL"
+  | "LUNGE"
+  | "CORE"
+  | "ACCESSORY"
+  | "OTHER";
+
+export type ExerciseDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+
+export type ExerciseEquipment =
+  | "BODYWEIGHT"
+  | "DUMBBELL"
+  | "BARBELL"
+  | "KETTLEBELL"
+  | "MACHINE"
+  | "RESISTANCE_BAND"
+  | "CABLE"
+  | "OTHER";
+
+export interface Exercise {
+  id: string;
+  name: string;
+  category: ExerciseCategory;
+  difficulty: ExerciseDifficulty;
+  equipment: ExerciseEquipment;
+  description?: string;
+  isDefault: boolean;
+  trainerId?: string;
+  trainer: AppUser;
+  howTo: string[];
+  cues: string[];
+  mistakes: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+export interface ExerciseSearchParams {
+  search?: string;
+  category?: ExerciseCategory;
+  difficulty?: ExerciseDifficulty;
+  equipment?: ExerciseEquipment;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ExerciseRecommendedParams {
+  categories?: ExerciseCategory[];
+  difficulty?: ExerciseDifficulty;
+}
+
+export interface ExerciseRecommendedResponse {
+  categories: ExerciseCategory[];
+  totalExercises: number;
+  exercisesByCategory: Record<ExerciseCategory, Exercise[]>;
+  allExercises: Exercise[];
+}
+
+// Session Exercise (linking exercise to session)
+export interface SessionExercise {
+  id: string;
+  sessionId: string;
+  session: ProgramSession;
+  exerciseId: string;
+  exercise: Exercise;
+  orderInSession: number;
+  sets?: number;
+  reps?: string;
+  restSeconds?: number;
+  tempo?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt?: Date;
 }

@@ -33,6 +33,10 @@ import type {
   ValidateInviteResponse,
   UpdateProgramRequest,
   UpdateTrainingDaysRequest,
+  Exercise,
+  ExerciseSearchParams,
+  ExerciseRecommendedParams,
+  ExerciseRecommendedResponse,
 } from '../types/api';
 import { api } from './client';
 
@@ -401,4 +405,36 @@ export const inviteApi = {
    */
   delete: (id: string) =>
     api.delete<{ message: string }>(`/invites/${id}`),
+};
+
+// ============================================================================
+// EXERCISES ENDPOINTS
+// ============================================================================
+
+export const exerciseApi = {
+  /**
+   * Search exercises with filters
+   */
+  search: (params?: ExerciseSearchParams) =>
+    api.get<Exercise[]>(`/exercises/search${buildQueryString(params || {})}`),
+
+  /**
+   * Get recommended exercises grouped by category
+   */
+  recommended: (params?: ExerciseRecommendedParams) => {
+    const queryParams: Record<string, any> = {};
+    if (params?.categories) {
+      queryParams.categories = params.categories.join(',');
+    }
+    if (params?.difficulty) {
+      queryParams.difficulty = params.difficulty;
+    }
+    return api.get<ExerciseRecommendedResponse>(`/exercises/recommended${buildQueryString(queryParams)}`);
+  },
+
+  /**
+   * Get single exercise by ID
+   */
+  getById: (id: string) =>
+    api.get<Exercise>(`/exercises/${id}`),
 };
