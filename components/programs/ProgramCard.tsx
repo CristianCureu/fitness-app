@@ -270,6 +270,7 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
                   label="Editează"
                   variant="outline"
                   onPress={() => onEdit(program)}
+                  iconName="create-outline"
                   className="flex-1"
                 />
               )}
@@ -277,6 +278,7 @@ export function ProgramCard({ program, onAssign, onDelete, onEdit }: ProgramCard
                 <Button
                   label="Asignează client"
                   onPress={() => onAssign(program)}
+                  iconName="checkmark-circle-outline"
                   className="flex-1"
                 />
               )}

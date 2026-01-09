@@ -101,6 +101,7 @@ export interface ScheduledSession {
   sessionName: string;
   notes?: string;
   status: SessionStatus;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   client?: {
@@ -120,8 +121,31 @@ export interface CreateSessionDto {
   autoRecommended?: boolean;
 }
 
+export interface CreateClientSessionDto {
+  startAt: string;
+  endAt?: string;
+}
+
 export interface UpdateSessionStatusDto {
   status: SessionStatus;
+}
+
+export interface ClientSessionRecommendation {
+  sessionName: string;
+  sessionType: string;
+}
+
+export interface AiAskResponse {
+  ideas: string[];
+  answer?: string;
+}
+
+export interface AiMealIdeasResponse {
+  ideas: string[];
+}
+
+export interface AiWeeklyFeedbackResponse {
+  summary: string;
 }
 
 // Check-in Types
@@ -152,6 +176,7 @@ export interface DailyRecommendation {
   clientId: string;
   date: string;
   focusText: string;
+  tipsText?: string;
   hasWorkoutToday: boolean;
   notes?: string;
   createdAt: string;
@@ -171,23 +196,75 @@ export interface NutritionGoal {
   id: string;
   clientId: string;
   weekStartDate: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  notes?: string;
+  proteinTargetPerDay: number;
+  waterTargetMlPerDay: number;
+  weeklyFocus: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateNutritionGoalDto {
   clientId: string;
   weekStartDate: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  notes?: string;
+  proteinTargetPerDay: number;
+  waterTargetMlPerDay: number;
+  weeklyFocus: string;
+}
+
+export interface NutritionSettings {
+  id: string;
+  clientId: string;
+  objective?: string;
+  proteinTargetPerDay: number;
+  waterTargetMlPerDay: number;
+  weeklyGoal1?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNutritionSettingsDto {
+  clientId: string;
+  objective?: string;
+  proteinTargetPerDay: number;
+  waterTargetMlPerDay: number;
+  weeklyGoal1?: string;
+}
+
+export type NutritionTipScope = "GLOBAL" | "CLIENT" | "OBJECTIVE";
+
+export interface NutritionTip {
+  id: string;
+  scope: NutritionTipScope;
+  text: string;
+  goalTag?: string;
+  clientId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNutritionTipDto {
+  scope: NutritionTipScope;
+  text: string;
+  goalTag?: string;
+  clientId?: string;
+}
+
+export type MealType = "BREAKFAST" | "LUNCH" | "DINNER";
+
+export interface MealIdea {
+  id: string;
+  title: string;
+  description?: string;
+  mealType: MealType;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMealIdeaDto {
+  title: string;
+  description?: string;
+  mealType: MealType;
+  tags?: string[];
 }
 
 // Today View Types (CLIENT only)
@@ -195,17 +272,19 @@ export interface TodayView {
   nextSession: ScheduledSession | null;
   dailyRecommendation: {
     focusText: string;
+    tipsText?: string | null;
     hasWorkoutToday: boolean;
     notes?: string;
     date: Date;
   };
   checkin: DailyCheckin | null;
   nutritionGoal: NutritionGoal | null;
+  nutritionSettings: NutritionSettings | null;
+  nutritionTip: NutritionTip | null;
   clientInfo: {
     firstName: string;
     lastName: string;
-    programWeek: number;
-    totalWeeks: number;
+    goalDescription?: string;
   };
 }
 
@@ -231,6 +310,21 @@ export interface RecommendationQueryParams {
 
 export interface NutritionGoalQueryParams {
   clientId?: string;
+}
+
+export interface NutritionSettingsQueryParams {
+  clientId?: string;
+}
+
+export interface NutritionTipQueryParams {
+  scope?: NutritionTipScope;
+  clientId?: string;
+  goalTag?: string;
+}
+
+export interface MealIdeaQueryParams {
+  type?: MealType;
+  tags?: string;
 }
 
 // Onboarding Types
@@ -504,4 +598,44 @@ export interface SessionExercise {
   notes?: string;
   createdAt: Date;
   updatedAt?: Date;
+}
+
+// ============================================================================
+// CLIENT SESSION VIEWS (reusing ScheduledSession where possible)
+// ============================================================================
+
+// Session Details with full exercise information
+export interface SessionExerciseDetail {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  difficulty: ExerciseDifficulty;
+  howTo: string[];
+  cues: string[];
+  mistakes: string[];
+  equipment: string[];
+  sets: number;
+  reps: string;
+  restSeconds: number | null;
+  tempo: string | null;
+  notes: string | null;
+  orderInSession: number;
+}
+
+export interface SessionDetails extends ScheduledSession {
+  exercises: SessionExerciseDetail[];
+  completedAt?: string | null;
+}
+
+// Complete Session Request
+export interface CompleteSessionRequest {
+  notes?: string;
+}
+
+// Week Calendar Response (reuses ScheduledSession structure)
+export interface WeekCalendarResponse {
+  weekStart: string;
+  weekEnd: string;
+  sessions: ScheduledSession[];
 }

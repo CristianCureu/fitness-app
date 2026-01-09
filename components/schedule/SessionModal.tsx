@@ -322,11 +322,18 @@ export function SessionModal({
 
         {/* Actions */}
         <View className="px-6 py-4 border-t border-border flex-row gap-3">
-          <Button label="Anulează" variant="ghost" onPress={onClose} className="flex-1" />
+          <Button
+            label="Anulează"
+            variant="ghost"
+            onPress={onClose}
+            iconName="close-outline"
+            className="flex-1"
+          />
           <Button
             label={isEdit ? "Salvează" : "Adaugă"}
             onPress={handleSubmit(onSubmit)}
             loading={loading}
+            iconName={isEdit ? "save-outline" : "add-circle-outline"}
             className="flex-1"
           />
         </View>

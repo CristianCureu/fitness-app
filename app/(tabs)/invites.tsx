@@ -247,6 +247,7 @@ export default function InvitesScreen() {
             label={createInvite.isPending ? "Creating..." : "Create Invite"}
             onPress={handleSubmit(handleInvite)}
             loading={createInvite.isPending}
+            iconName="mail-outline"
             fullWidth
           />
         </View>

@@ -136,7 +136,13 @@ export default function ClientViewPreviewScreen() {
           </View>
         </View>
 
-        <Button label="Inchide modul client" variant="outline" onPress={() => router.back()} fullWidth />
+        <Button
+          label="Inchide modul client"
+          variant="outline"
+          onPress={() => router.back()}
+          iconName="log-out-outline"
+          fullWidth
+        />
       </View>
     </ScrollView>
   );

@@ -80,6 +80,7 @@ export default function ClientsScreen() {
             label="Trimite invitație"
             variant="outline"
             onPress={handlePressInvite}
+            iconName="mail-outline"
             className="flex-1"
           />
           <Button
@@ -87,6 +88,7 @@ export default function ClientsScreen() {
             variant="ghost"
             onPress={() => clientsQuery.refetch()}
             loading={clientsQuery.isFetching && !clientsQuery.isRefetching}
+            iconName="refresh-outline"
             className="w-32"
           />
         </View>

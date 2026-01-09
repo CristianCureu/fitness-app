@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, PressableProps, Text } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { cn } from '@/lib/utils';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -8,6 +9,8 @@ type ButtonProps = PressableProps & {
   variant?: ButtonVariant;
   loading?: boolean;
   fullWidth?: boolean;
+  iconName?: React.ComponentProps<typeof Ionicons>['name'];
+  iconPosition?: 'left' | 'right';
 };
 
 const VARIANT_STYLES: Record<ButtonVariant, { container: string; text: string }> = {
@@ -47,6 +50,8 @@ export function Button({
   loading = false,
   disabled,
   fullWidth,
+  iconName,
+  iconPosition = 'left',
   className,
   ...props
 }: ButtonProps) {
@@ -69,7 +74,15 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={indicatorColor} />
       ) : (
-        <Text className={cn('text-base', text)}>{label}</Text>
+        <>
+          {iconName && iconPosition === 'left' ? (
+            <Ionicons name={iconName} size={16} color={indicatorColor} />
+          ) : null}
+          <Text className={cn('text-base', text)}>{label}</Text>
+          {iconName && iconPosition === 'right' ? (
+            <Ionicons name={iconName} size={16} color={indicatorColor} />
+          ) : null}
+        </>
       )}
     </Pressable>
   );

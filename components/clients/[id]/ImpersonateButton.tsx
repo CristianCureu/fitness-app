@@ -14,6 +14,7 @@ export function ImpersonateButton({ clientId }: ImpersonateButtonProps) {
         onPress={() =>
           router.push({ pathname: "/(tabs)/clients/[id]/client-view", params: { id: clientId } })
         }
+        iconName="eye-outline"
         fullWidth
       />
       <Text className="text-text-muted text-xs text-center mt-2">

@@ -47,7 +47,7 @@ export function ActiveProgramSection({
     : [];
 
   return (
-    <Section title="Program activ">
+    <Section title="Program activ" icon="calendar-outline">
       {activeProgram ? (
         <>
           <View className="flex-row items-center justify-between">
@@ -127,6 +127,7 @@ export function ActiveProgramSection({
               label="Schimbă program"
               variant="outline"
               onPress={onAssignPress}
+              iconName="swap-horizontal-outline"
               className="flex-1"
             />
             <Button
@@ -134,6 +135,7 @@ export function ActiveProgramSection({
               variant="secondary"
               onPress={() => setShowEditProgram(true)}
               loading={updatingProgram}
+              iconName="create-outline"
               className="flex-1"
             />
           </View>
@@ -144,6 +146,7 @@ export function ActiveProgramSection({
               variant="danger"
               onPress={onRemove}
               loading={removing}
+              iconName="trash-outline"
               className="mt-3"
               fullWidth
             />
@@ -157,7 +160,7 @@ export function ActiveProgramSection({
           <Text className="text-text-muted text-sm">
             Alege un template sau folosește recomandările AI pentru a-l porni.
           </Text>
-          <Button label="Atribuie program" onPress={onAssignPress} />
+          <Button label="Atribuie program" onPress={onAssignPress} iconName="checkmark-circle-outline" />
         </View>
       )}
 

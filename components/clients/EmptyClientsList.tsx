@@ -22,6 +22,7 @@ export function EmptyClientsList({ hasActiveFilters, onPressInvite }: EmptyClien
           label="Generează invitație"
           variant="secondary"
           onPress={onPressInvite}
+          iconName="mail-outline"
           className="mt-4"
         />
       )}

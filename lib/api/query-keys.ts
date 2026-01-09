@@ -3,6 +3,9 @@ import type {
   CheckinQueryParams,
   RecommendationQueryParams,
   NutritionGoalQueryParams,
+  NutritionSettingsQueryParams,
+  NutritionTipQueryParams,
+  MealIdeaQueryParams,
   ExerciseSearchParams,
   ExerciseRecommendedParams,
 } from '../types/api';
@@ -31,6 +34,11 @@ export const queryKeys = {
     all: (params?: SessionQueryParams) =>
       params ? ['sessions', params] as const : ['sessions'] as const,
     detail: (id: string) => ['sessions', id] as const,
+    upcoming: (limit?: number) =>
+      limit ? ['sessions', 'upcoming', limit] as const : ['sessions', 'upcoming'] as const,
+    history: (limit?: number, offset?: number) =>
+      ['sessions', 'history', { limit, offset }] as const,
+    weekCalendar: (date: string) => ['sessions', 'calendar', date] as const,
   },
 
   // Programs
@@ -70,6 +78,13 @@ export const queryKeys = {
       params ? ['nutrition', params] as const : ['nutrition'] as const,
     detail: (id: string) => ['nutrition', id] as const,
     current: () => ['nutrition', 'current'] as const,
+    settings: (params?: NutritionSettingsQueryParams) =>
+      params ? ['nutrition', 'settings', params] as const : ['nutrition', 'settings'] as const,
+    tips: (params?: NutritionTipQueryParams) =>
+      params ? ['nutrition', 'tips', params] as const : ['nutrition', 'tips'] as const,
+    todayTip: () => ['nutrition', 'tips', 'today'] as const,
+    meals: (params?: MealIdeaQueryParams) =>
+      params ? ['nutrition', 'meals', params] as const : ['nutrition', 'meals'] as const,
   },
 
   // Onboarding
@@ -95,5 +110,12 @@ export const queryKeys = {
     recommended: (params?: ExerciseRecommendedParams) =>
       params ? ['exercises', 'recommended', params] as const : ['exercises', 'recommended'] as const,
     detail: (id: string) => ['exercises', id] as const,
+  },
+
+  // AI (CLIENT)
+  ai: {
+    ask: () => ['ai', 'ask'] as const,
+    mealIdeas: () => ['ai', 'meal-ideas'] as const,
+    weeklyFeedback: () => ['ai', 'weekly-feedback'] as const,
   },
 } as const;

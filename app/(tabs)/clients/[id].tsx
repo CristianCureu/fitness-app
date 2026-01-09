@@ -1,38 +1,31 @@
 import {
   ActiveProgramSection,
   ClientDetailHeader,
-  GoalSection,
-  ImpersonateButton,
-  NotesSection,
-  OnboardingInfoSection,
-  ProgramHistorySection,
-  RecommendationsSection,
+  NutritionSection,
 } from "@/components/clients/[id]";
 import { AssignProgramModal, ProgramPickerModal } from "@/components/programs";
 import { useClient } from "@/lib/hooks/queries/use-clients";
 import {
   useActiveClientProgram,
   useAssignProgram,
-  useProgramHistory,
-  useProgramRecommendations,
   usePrograms,
   useRemoveProgramAssignment,
   useUpdateProgram,
   useUpdateTrainingDays,
 } from "@/lib/hooks/queries/use-programs";
 import type { DayOfWeek, Program, UpdateProgramRequest } from "@/lib/types/api";
-import { useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function ClientDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const clientId = Array.isArray(id) ? id[0] : id;
   const clientQuery = useClient(clientId || "");
+  const router = useRouter();
   const programsQuery = usePrograms();
   const activeProgramQuery = useActiveClientProgram(clientId);
-  const recommendationsQuery = useProgramRecommendations(clientId);
-  const historyQuery = useProgramHistory(clientId);
   const assignProgramMutation = useAssignProgram();
   const updateProgramMutation = useUpdateProgram();
   const updateTrainingDaysMutation = useUpdateTrainingDays();
@@ -48,8 +41,7 @@ export default function ClientDetailsScreen() {
   const [defaultCustomize, setDefaultCustomize] = useState(false);
 
   const client = clientQuery.data;
-  const activeProgram =
-    activeProgramQuery.data || recommendationsQuery.data?.currentProgram || null;
+  const activeProgram = activeProgramQuery.data || null;
 
   if (!clientId) {
     return (
@@ -104,20 +96,6 @@ export default function ClientDetailsScreen() {
       sessionsPerWeek: program.sessionsPerWeek,
     });
     setDefaultCustomize(customize);
-    setShowAssignModal(true);
-  };
-
-  const handleRecommendationAssign = ({
-    programId,
-    programName,
-    customize,
-  }: {
-    programId: string;
-    programName: string;
-    customize?: boolean;
-  }) => {
-    setSelectedProgram({ id: programId, name: programName });
-    setDefaultCustomize(Boolean(customize));
     setShowAssignModal(true);
   };
 
@@ -179,23 +157,29 @@ export default function ClientDetailsScreen() {
           removing={removeProgramMutation.isPending}
         />
 
-        <RecommendationsSection
-          recommendations={recommendationsQuery.data?.recommendations}
-          clientStats={recommendationsQuery.data?.clientStats}
-          currentProgram={activeProgram}
-          loading={recommendationsQuery.isLoading}
-          onAssign={handleRecommendationAssign}
-        />
+        <NutritionSection client={client} />
 
-        <ProgramHistorySection
-          history={historyQuery.data?.history}
-          loading={historyQuery.isLoading}
-        />
-
-        <GoalSection client={client} />
-        <OnboardingInfoSection client={client} />
-        <NotesSection client={client} />
-        <ImpersonateButton clientId={client.id} />
+        <Pressable
+          onPress={() =>
+            router.push({ pathname: "/(tabs)/clients/[id]/details", params: { id: client.id } })
+          }
+          className="bg-surface border border-border rounded-2xl p-5 mb-6"
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-3">
+              <View className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/40 items-center justify-center">
+                <Ionicons name="layers-outline" size={20} color="#f798af" />
+              </View>
+              <View>
+                <Text className="text-text-primary font-semibold">Detalii client</Text>
+                <Text className="text-text-muted text-sm">
+                  Istoric, onboarding, recomandari si note
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#A3ADC8" />
+          </View>
+        </Pressable>
       </View>
 
       <ProgramPickerModal

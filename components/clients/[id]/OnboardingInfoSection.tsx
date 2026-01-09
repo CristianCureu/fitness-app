@@ -33,7 +33,7 @@ export function OnboardingInfoSection({ client }: OnboardingInfoSectionProps) {
   ];
 
   return (
-    <Section title="Info onboarding">
+    <Section title="Info onboarding" icon="clipboard-outline">
       {onboardingInfo.map((item) => (
         <InfoRow key={item.label} label={item.label} value={item.value} icon={item.icon} />
       ))}

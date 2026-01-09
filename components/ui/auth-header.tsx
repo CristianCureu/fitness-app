@@ -6,8 +6,8 @@ interface AuthHeaderProps {
 }
 
 export default function AuthHeader({
-  title = "Create Account",
-  description = "Start your fitness journey today",
+  title = "Creează cont",
+  description = "Începe-ți parcursul azi",
 }: AuthHeaderProps) {
   return (
     <View className="mb-12">
@@ -19,7 +19,7 @@ export default function AuthHeader({
           <Text className="text-xs text-text-muted tracking-[1.5px] font-semibold">
             FITNESS EXPERIENCE
           </Text>
-          <Text className="text-text-secondary text-sm">Build momentum today.</Text>
+          <Text className="text-text-secondary text-sm">Construiește ritmul tău.</Text>
         </View>
       </View>
       <Text className="text-4xl font-bold text-text-primary mb-3">{title}</Text>

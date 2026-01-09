@@ -18,6 +18,7 @@ export function EmptySchedule({ onAddSession }: EmptyScheduleProps) {
         label="Adaugă sesiune"
         variant="secondary"
         onPress={onAddSession}
+        iconName="add-circle-outline"
         className="mt-4"
       />
     </View>

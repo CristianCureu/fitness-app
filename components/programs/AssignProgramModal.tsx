@@ -328,12 +328,14 @@ export function AssignProgramModal({
             onPress={handleSubmit(submit)}
             loading={loading}
             disabled={!program}
+            iconName="checkmark-circle-outline"
             fullWidth
           />
           <Button
             label="Anulează"
             variant="ghost"
             onPress={onClose}
+            iconName="close-outline"
             className="mt-3"
             fullWidth
           />

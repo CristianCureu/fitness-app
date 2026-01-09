@@ -8,3 +8,4 @@ export { Section } from "./Section";
 export { ActiveProgramSection } from "./ActiveProgramSection";
 export { RecommendationsSection } from "./RecommendationsSection";
 export { ProgramHistorySection } from "./ProgramHistorySection";
+export { NutritionSection } from "./NutritionSection";

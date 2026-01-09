@@ -62,8 +62,8 @@ type TabConfig = {
 export default function TabLayout() {
   const role = useAuthStore((s) => s.appUser?.role);
   const tabs: TabConfig[] = [
-    { name: "index", title: "Home", icon: "home", roles: ["CLIENT"] },
-    { name: "workouts", title: "Workouts", icon: "barbell-outline", roles: ["CLIENT"] },
+    { name: "index", title: "Azi", icon: "sunny-outline", roles: ["CLIENT"] },
+    { name: "program", title: "Program", icon: "calendar-outline", roles: ["CLIENT"] },
     { name: "clients", title: "Clients", icon: "people", roles: ["TRAINER"] },
     {
       name: "programs",
@@ -83,7 +83,7 @@ export default function TabLayout() {
       icon: "mail-unread-outline",
       roles: ["TRAINER"],
     },
-    { name: "profile", title: "Profile", icon: "person" },
+    { name: "profile", title: "Tu", icon: "person-circle-outline" },
   ];
 
   const tabBarStyle: BottomTabNavigationOptions["tabBarStyle"] = Platform.select({
@@ -107,6 +107,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      key={role || "guest"}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.activeTint,
@@ -120,18 +121,25 @@ export default function TabLayout() {
     >
       {tabs.map((tab) => {
         const isAllowed = !tab.roles || (role && tab.roles.includes(role));
+        const isProfile = tab.name === "profile";
+        const profileTitle = role === "CLIENT" ? "Tu" : "Profile";
+        const profileIcon = role === "CLIENT" ? "person-circle-outline" : "person";
 
         return (
           <Tabs.Screen
             key={tab.name}
             name={tab.name}
             options={{
-              title: tab.title,
+              title: isProfile ? profileTitle : tab.title,
               href: isAllowed ? undefined : null,
               tabBarIcon:
                 isAllowed && !tab.hidden
                   ? ({ color, focused }) => (
-                      <TabIcon name={tab.icon} color={color} focused={focused} />
+                      <TabIcon
+                        name={isProfile ? profileIcon : tab.icon}
+                        color={color}
+                        focused={focused}
+                      />
                     )
                   : undefined,
             }}

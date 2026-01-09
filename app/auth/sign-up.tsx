@@ -46,8 +46,8 @@ export default function SignUpScreen() {
       if (result.requiresEmailVerification) {
         // Email verification required - show success message
         Alert.alert(
-          "Check Your Email",
-          "Account created successfully! Please check your email and click the verification link to activate your account.",
+          "Verifică emailul",
+          "Cont creat cu succes! Verifică emailul și apasă pe linkul de confirmare pentru a-ți activa contul.",
           [
             {
               text: "OK",
@@ -57,7 +57,7 @@ export default function SignUpScreen() {
         );
       } else {
         // Instant sign-in - go to app
-        Alert.alert("Success", "Account created successfully!", [
+        Alert.alert("Succes", "Cont creat cu succes!", [
           {
             text: "OK",
             onPress: () => router.replace("/(tabs)"),
@@ -66,7 +66,7 @@ export default function SignUpScreen() {
       }
     },
     onError: (error) => {
-      Alert.alert("Sign Up Failed", error.message || "An error occurred");
+      Alert.alert("Înregistrare eșuată", error.message || "A apărut o eroare");
     },
   });
 
@@ -104,14 +104,14 @@ export default function SignUpScreen() {
                 <Text className="text-xs text-text-muted tracking-[1.5px] font-semibold">
                   FITNESS EXPERIENCE
                 </Text>
-                <Text className="text-text-secondary text-sm">Build momentum today.</Text>
+                <Text className="text-text-secondary text-sm">Construiește ritmul tău.</Text>
               </View>
             </View>
             <Text className="text-4xl font-bold text-text-primary mb-3">
-              Create Account
+              Creează cont
             </Text>
             <Text className="text-base text-text-secondary">
-              Start your fitness journey today
+              Începe-ți parcursul azi
             </Text>
           </View>
 
@@ -122,16 +122,16 @@ export default function SignUpScreen() {
               control={control}
               name="email"
               rules={{
-                required: "Email is required",
+                required: "Emailul este obligatoriu",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
+                  message: "Adresă de email invalidă",
                 },
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
-                  label="EMAIL ADDRESS"
-                  placeholder="you@example.com"
+                  label="ADRESĂ EMAIL"
+                  placeholder="tu@exemplu.com"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -150,15 +150,15 @@ export default function SignUpScreen() {
               control={control}
               name="password"
               rules={{
-                required: "Password is required",
+                required: "Parola este obligatorie",
                 minLength: {
                   value: 6,
-                  message: "Password must be at least 6 characters",
+                  message: "Parola trebuie să aibă minim 6 caractere",
                 },
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
-                  label="PASSWORD"
+                  label="PAROLĂ"
                   placeholder="••••••••"
                   value={value}
                   onChangeText={onChange}
@@ -166,7 +166,7 @@ export default function SignUpScreen() {
                   secureTextEntry
                   editable={!signUpMutation.isPending}
                   error={errors.password?.message}
-                  helper={!errors.password ? "Must be at least 6 characters" : undefined}
+                  helper={!errors.password ? "Minim 6 caractere" : undefined}
                   containerClassName="mb-6"
                 />
               )}
@@ -177,12 +177,12 @@ export default function SignUpScreen() {
               control={control}
               name="confirmPassword"
               rules={{
-                required: "Please confirm your password",
-                validate: (value) => value === password || "Passwords do not match",
+                required: "Confirmă parola",
+                validate: (value) => value === password || "Parolele nu coincid",
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
-                  label="CONFIRM PASSWORD"
+                  label="CONFIRMĂ PAROLA"
                   placeholder="••••••••"
                   value={value}
                   onChangeText={onChange}
@@ -197,9 +197,10 @@ export default function SignUpScreen() {
 
             {/* Sign Up Button */}
             <Button
-              label="Create Account"
+              label="Creează cont"
               onPress={handleSubmit(onSubmit)}
               loading={signUpMutation.isPending}
+              iconName="person-add-outline"
               fullWidth
               className="mt-5 mb-6"
             />
@@ -207,18 +208,19 @@ export default function SignUpScreen() {
             {/* Divider */}
             <View className="flex-row items-center my-8">
               <View className="flex-1 h-px bg-border" />
-              <Text className="mx-4 text-sm text-text-muted">or</Text>
+              <Text className="mx-4 text-sm text-text-muted">sau</Text>
               <View className="flex-1 h-px bg-border" />
             </View>
 
             {/* Sign In Link */}
             <View className="flex-row items-center justify-center gap-2">
-              <Text className="text-text-secondary">Already have an account? </Text>
+              <Text className="text-text-secondary">Ai deja cont? </Text>
               <Button
-                label="Sign In"
+                label="Autentificare"
                 variant="ghost"
                 onPress={handleSignIn}
                 disabled={signUpMutation.isPending}
+                iconName="log-in-outline"
                 className="h-auto px-0 py-0"
               />
             </View>

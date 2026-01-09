@@ -105,11 +105,13 @@ export default function FitnessGoalsStep() {
             label="Back"
             onPress={previousStep}
             variant="outline"
+            iconName="arrow-back-outline"
             className="flex-1"
           />
           <Button
             label="Continue"
             onPress={handleSubmit(onSubmit)}
+            iconName="arrow-forward-outline"
             className="flex-1"
           />
         </View>
@@ -123,6 +125,7 @@ export default function FitnessGoalsStep() {
               nextStep();
             }}
             variant="ghost"
+            iconName="play-skip-forward-outline"
             fullWidth
           />
         </View>

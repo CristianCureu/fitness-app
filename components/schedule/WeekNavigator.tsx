@@ -23,7 +23,13 @@ export function WeekNavigator({
 }: WeekNavigatorProps) {
   return (
     <View className="bg-surface border border-border rounded-2xl p-4 flex-row items-center justify-between">
-      <Button label="←" variant="ghost" onPress={onPrevious} className="w-12" />
+      <Button
+        label=" "
+        variant="ghost"
+        onPress={onPrevious}
+        iconName="chevron-back"
+        className="w-12"
+      />
       <View className="flex-1 items-center">
         <Text className="text-text-primary text-lg font-semibold">
           {startOfWeek.format("D MMM")} - {endOfWeek.format("D MMM YYYY")}
@@ -33,11 +39,18 @@ export function WeekNavigator({
             label="Săptămâna curentă"
             variant="ghost"
             onPress={onToday}
+            iconName="time-outline"
             className="mt-2"
           />
         )}
       </View>
-      <Button label="→" variant="ghost" onPress={onNext} className="w-12" />
+      <Button
+        label=" "
+        variant="ghost"
+        onPress={onNext}
+        iconName="chevron-forward"
+        className="w-12"
+      />
     </View>
   );
 }

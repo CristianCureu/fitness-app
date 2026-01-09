@@ -6,19 +6,33 @@ import type {
   CreateCheckinDto,
   CreateClientProfileDto,
   CreateInviteRequest,
+  CreateClientSessionDto,
   CreateNutritionGoalDto,
+  CreateNutritionSettingsDto,
+  CreateNutritionTipDto,
+  CreateMealIdeaDto,
   AssignProgramRequest,
   CreateProgramRequest,
   CreateRecommendationDto,
   CreateSessionDto,
   ClientProgram,
+  ClientSessionRecommendation,
+  AiAskResponse,
+  AiMealIdeasResponse,
+  AiWeeklyFeedbackResponse,
   DailyCheckin,
   DailyRecommendation,
   GetProgramHistoryResponse,
   GetRecommendationsResponse,
   InviteCode,
+  MealIdea,
+  MealIdeaQueryParams,
   NutritionGoal,
   NutritionGoalQueryParams,
+  NutritionSettings,
+  NutritionSettingsQueryParams,
+  NutritionTip,
+  NutritionTipQueryParams,
   OnboardingStatus,
   PaginatedResponse,
   Program,
@@ -37,6 +51,9 @@ import type {
   ExerciseSearchParams,
   ExerciseRecommendedParams,
   ExerciseRecommendedResponse,
+  SessionDetails,
+  CompleteSessionRequest,
+  WeekCalendarResponse,
 } from '../types/api';
 import { api } from './client';
 
@@ -114,12 +131,54 @@ export const scheduleApi = {
     api.post<ScheduledSession>('/schedule/sessions', data),
 
   /**
+   * Create session as client (CLIENT only)
+   */
+  createClientSession: (data: CreateClientSessionDto) =>
+    api.post<ScheduledSession>('/schedule/sessions/client', data),
+
+  /**
+   * Get recommended session for client (CLIENT only)
+   */
+  getClientRecommendation: () =>
+    api.get<ClientSessionRecommendation>('/schedule/recommendation'),
+
+  /**
    * Get all sessions (filtered by role)
    * TRAINER: sees all their clients' sessions
    * CLIENT: only sees their own sessions
    */
   getSessions: (params?: SessionQueryParams) =>
     api.get<PaginatedResponse<ScheduledSession>>(`/schedule/sessions${buildQueryString(params || {})}`),
+
+  /**
+   * Get session details with exercises (CLIENT)
+   */
+  getSessionDetails: (id: string) =>
+    api.get<SessionDetails>(`/schedule/sessions/${id}`),
+
+  /**
+   * Complete a session (CLIENT)
+   */
+  completeSession: (id: string, data: CompleteSessionRequest) =>
+    api.post<SessionDetails>(`/schedule/sessions/${id}/complete`, data),
+
+  /**
+   * Get week calendar (CLIENT)
+   */
+  getWeekCalendar: (date: string) =>
+    api.get<WeekCalendarResponse>(`/schedule/calendar/week${buildQueryString({ date })}`),
+
+  /**
+   * Get upcoming sessions (CLIENT)
+   */
+  getUpcomingSessions: (limit: number = 5) =>
+    api.get<ScheduledSession[]>(`/schedule/sessions/upcoming${buildQueryString({ limit })}`),
+
+  /**
+   * Get session history (CLIENT)
+   */
+  getSessionHistory: (limit: number = 20, offset: number = 0) =>
+    api.get<PaginatedResponse<ScheduledSession>>(`/schedule/sessions/history${buildQueryString({ limit, offset })}`),
 
   /**
    * Update session (TRAINER only)
@@ -230,7 +289,10 @@ export const checkinApi = {
    * Creates or updates check-in for today
    */
   upsertToday: (data: CreateCheckinDto) =>
-    api.post<DailyCheckin>('/checkins/today', data),
+    api.post<DailyCheckin>('/checkins/today', {
+      ...data,
+      note: data.notes,
+    }),
 
   /**
    * Get all check-ins
@@ -250,7 +312,10 @@ export const checkinApi = {
    * Update check-in (CLIENT and TRAINER)
    */
   update: (id: string, data: Partial<CreateCheckinDto>) =>
-    api.patch<DailyCheckin>(`/checkins/${id}`, data),
+    api.patch<DailyCheckin>(`/checkins/${id}`, {
+      ...data,
+      note: data.notes,
+    }),
 
   /**
    * Delete check-in (CLIENT and TRAINER)
@@ -351,6 +416,78 @@ export const nutritionApi = {
    */
   delete: (id: string) =>
     api.delete<void>(`/nutrition/goals/${id}`),
+
+  /**
+   * Get nutrition settings
+   */
+  getSettings: (params?: NutritionSettingsQueryParams) =>
+    api.get<NutritionSettings | null>(`/nutrition/settings${buildQueryString(params || {})}`),
+
+  /**
+   * Upsert nutrition settings (TRAINER only)
+   */
+  upsertSettings: (data: CreateNutritionSettingsDto) =>
+    api.post<NutritionSettings>('/nutrition/settings', data),
+
+  /**
+   * Update nutrition settings (TRAINER only)
+   */
+  updateSettings: (id: string, data: Partial<CreateNutritionSettingsDto>) =>
+    api.patch<NutritionSettings>(`/nutrition/settings/${id}`, data),
+
+  /**
+   * Get today's nutrition tip (CLIENT only)
+   */
+  getTodayTip: () =>
+    api.get<NutritionTip | null>('/nutrition/tips/today'),
+
+  /**
+   * List nutrition tips (TRAINER only)
+   */
+  getTips: (params?: NutritionTipQueryParams) =>
+    api.get<NutritionTip[]>(`/nutrition/tips${buildQueryString(params || {})}`),
+
+  /**
+   * Create nutrition tip (TRAINER only)
+   */
+  createTip: (data: CreateNutritionTipDto) =>
+    api.post<NutritionTip>('/nutrition/tips', data),
+
+  /**
+   * Update nutrition tip (TRAINER only)
+   */
+  updateTip: (id: string, data: Partial<CreateNutritionTipDto>) =>
+    api.patch<NutritionTip>(`/nutrition/tips/${id}`, data),
+
+  /**
+   * Delete nutrition tip (TRAINER only)
+   */
+  deleteTip: (id: string) =>
+    api.delete<void>(`/nutrition/tips/${id}`),
+
+  /**
+   * List meal ideas
+   */
+  getMealIdeas: (params?: MealIdeaQueryParams) =>
+    api.get<MealIdea[]>(`/nutrition/meals${buildQueryString(params || {})}`),
+
+  /**
+   * Create meal idea (TRAINER only)
+   */
+  createMealIdea: (data: CreateMealIdeaDto) =>
+    api.post<MealIdea>('/nutrition/meals', data),
+
+  /**
+   * Update meal idea (TRAINER only)
+   */
+  updateMealIdea: (id: string, data: Partial<CreateMealIdeaDto>) =>
+    api.patch<MealIdea>(`/nutrition/meals/${id}`, data),
+
+  /**
+   * Delete meal idea (TRAINER only)
+   */
+  deleteMealIdea: (id: string) =>
+    api.delete<void>(`/nutrition/meals/${id}`),
 };
 
 // ============================================================================
@@ -375,6 +512,21 @@ export const onboardingApi = {
    */
   complete: (data: CompleteOnboardingRequest) =>
     api.post<{ message: string; profile: ClientProfile }>('/onboarding/complete', data),
+};
+
+// ============================================================================
+// AI ENDPOINTS (CLIENT)
+// ============================================================================
+
+export const aiApi = {
+  askToday: (question: string) =>
+    api.post<AiAskResponse>('/ai/ask', { question }),
+
+  mealIdeas: (data?: { preferences?: string[]; mealsPerDay?: number }) =>
+    api.post<AiMealIdeasResponse>('/ai/meal-ideas', data),
+
+  weeklyFeedback: () =>
+    api.post<AiWeeklyFeedbackResponse>('/ai/weekly-feedback'),
 };
 
 // ============================================================================

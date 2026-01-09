@@ -104,6 +104,7 @@ export default function InviteCodeStep() {
           label="Continue"
           onPress={handleSubmit(onSubmit)}
           loading={validateInviteMutation.isPending}
+          iconName="arrow-forward-outline"
           fullWidth
           className="mt-5"
         />

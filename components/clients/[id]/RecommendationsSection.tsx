@@ -44,7 +44,7 @@ export function RecommendationsSection({
   onAssign,
 }: RecommendationsSectionProps) {
   return (
-    <Section title="Recomandări AI">
+    <Section title="Recomandări AI" icon="bulb-outline">
       {currentProgram ? (
         <View className="mb-3">
           <Text className="text-text-secondary text-xs">
@@ -55,10 +55,10 @@ export function RecommendationsSection({
 
       {clientStats && (
         <View className="flex-row flex-wrap gap-2 mb-4">
-          <StatChip label="Rată finalizare" value={`${Math.round(clientStats.completionRate * 100)}%`} />
-          <StatChip label="Consistență" value={`${Math.round(clientStats.consistency * 100)}%`} />
-          <StatChip label="Nutriție" value={`${Math.round(clientStats.avgNutritionScore * 100)}%`} />
-          <StatChip label="Durere" value={`${Math.round(clientStats.painFrequency * 100)}%`} />
+          <StatChip label="Rată finalizare" value={`${Math.round(clientStats.completionRate)}%`} />
+          <StatChip label="Consistență" value={`${clientStats.consistency.toFixed(1)}/săpt`} />
+          <StatChip label="Nutriție" value={`${clientStats.avgNutritionScore.toFixed(1)}/10`} />
+          <StatChip label="Durere" value={`${Math.round(clientStats.painFrequency)}%`} />
         </View>
       )}
 
@@ -128,6 +128,7 @@ export function RecommendationsSection({
                   onPress={() =>
                     onAssign({ programId: rec.programId, programName: rec.programName })
                   }
+                  iconName="checkmark-circle-outline"
                   className="flex-1"
                 />
                 <Button
@@ -140,6 +141,7 @@ export function RecommendationsSection({
                       customize: true,
                     })
                   }
+                  iconName="create-outline"
                   className="flex-1"
                 />
               </View>

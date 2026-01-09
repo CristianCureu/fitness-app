@@ -141,12 +141,14 @@ export default function ReviewStep() {
             onPress={previousStep}
             variant="outline"
             disabled={completeOnboardingMutation.isPending}
+            iconName="arrow-back-outline"
             className="flex-1"
           />
           <Button
             label="Complete"
             onPress={handleSubmit}
             loading={completeOnboardingMutation.isPending}
+            iconName="checkmark-circle-outline"
             className="flex-1"
           />
         </View>

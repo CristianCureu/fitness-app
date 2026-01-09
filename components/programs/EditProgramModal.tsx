@@ -460,12 +460,14 @@ export function EditProgramModal({
                 label="Salvează"
                 onPress={handleSubmit(onSubmit)}
                 loading={loading}
+                iconName="save-outline"
                 className="flex-1"
               />
               <Button
                 label="Anulează"
                 variant="ghost"
                 onPress={onClose}
+                iconName="close-outline"
                 className="flex-1"
               />
             </View>

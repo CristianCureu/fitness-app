@@ -42,7 +42,7 @@ export default function SignInScreen() {
       router.replace("/(tabs)");
     },
     onError: (error: any) => {
-      Alert.alert("Sign In Failed", error.message || "An error occurred");
+      Alert.alert("Autentificare eșuată", error.message || "A apărut o eroare");
     },
   });
 
@@ -72,8 +72,8 @@ export default function SignInScreen() {
         >
           {/* Header */}
           <AuthLogo
-            title="Welcome Back"
-            description="Sign in to continue your fitness journey"
+            title="Bine ai revenit"
+            description="Autentifică-te ca să continui parcursul tău"
           />
 
           {/* Form */}
@@ -83,16 +83,16 @@ export default function SignInScreen() {
               control={control}
               name="email"
               rules={{
-                required: "Email is required",
+                required: "Emailul este obligatoriu",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
+                  message: "Adresă de email invalidă",
                 },
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
-                  label="EMAIL ADDRESS"
-                  placeholder="you@example.com"
+                  label="ADRESĂ EMAIL"
+                  placeholder="tu@exemplu.com"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -111,15 +111,15 @@ export default function SignInScreen() {
               control={control}
               name="password"
               rules={{
-                required: "Password is required",
+                required: "Parola este obligatorie",
                 minLength: {
                   value: 6,
-                  message: "Password must be at least 6 characters",
+                  message: "Parola trebuie să aibă minim 6 caractere",
                 },
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormInput
-                  label="PASSWORD"
+                  label="PAROLĂ"
                   placeholder="••••••••"
                   value={value}
                   onChangeText={onChange}
@@ -134,9 +134,10 @@ export default function SignInScreen() {
 
             {/* Sign In Button */}
             <Button
-              label="Sign In"
+              label="Autentificare"
               onPress={handleSubmit(onSubmit)}
               loading={signInMutation.isPending}
+              iconName="log-in-outline"
               fullWidth
               className="mt-5 mb-6"
             />
@@ -144,18 +145,19 @@ export default function SignInScreen() {
             {/* Divider */}
             <View className="flex-row items-center my-8">
               <View className="flex-1 h-px bg-border" />
-              <Text className="mx-4 text-sm text-text-muted">or</Text>
+              <Text className="mx-4 text-sm text-text-muted">sau</Text>
               <View className="flex-1 h-px bg-border" />
             </View>
 
             {/* Sign Up Link */}
             <View className="flex-row items-center justify-center gap-2">
-              <Text className="text-text-secondary">Don&apos;t have an account?</Text>
+              <Text className="text-text-secondary">Nu ai cont?</Text>
               <Button
-                label="Sign Up"
+                label="Creează cont"
                 variant="ghost"
                 onPress={handleSignUp}
                 disabled={signInMutation.isPending}
+                iconName="person-add-outline"
                 className="h-auto px-0 py-0"
               />
             </View>

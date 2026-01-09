@@ -19,7 +19,7 @@ export function ProgramHistorySection({ history, loading }: ProgramHistorySectio
   const hasMore = (history?.length || 0) > PREVIEW_COUNT;
 
   return (
-    <Section title="Istoric programe">
+    <Section title="Istoric programe" icon="time-outline">
       {loading ? (
         <View className="py-6 items-center">
           <ActivityIndicator color="#f798af" />

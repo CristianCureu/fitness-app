@@ -128,11 +128,13 @@ export default function PersonalInfoStep() {
             label="Back"
             onPress={previousStep}
             variant="outline"
+            iconName="arrow-back-outline"
             className="flex-1"
           />
           <Button
             label="Continue"
             onPress={handleSubmit(onSubmit)}
+            iconName="arrow-forward-outline"
             className="flex-1"
           />
         </View>

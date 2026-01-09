@@ -18,7 +18,7 @@ import { useAppUser } from "@/lib/stores/auth-store";
 import type { CreateSessionDto, ScheduledSession, SessionStatus } from "@/lib/types/api";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,6 +33,8 @@ dayjs.extend(isoWeek);
 export default function ScheduleScreen() {
   const appUser = useAppUser();
   const [currentWeek, setCurrentWeek] = useState(dayjs());
+  const [viewMode, setViewMode] = useState<"week" | "day">("week");
+  const [selectedDay, setSelectedDay] = useState(dayjs());
   const [selectedClientId, setSelectedClientId] = useState<string>();
   const [selectedStatus, setSelectedStatus] = useState<SessionStatus>();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -59,6 +61,12 @@ export default function ScheduleScreen() {
 
   const sessions = sessionsQuery.data?.data || [];
   const totalSessions = sessionsQuery.data?.total || 0;
+  const daySessions = useMemo(() => {
+    if (viewMode !== "day") return sessions;
+    return sessions.filter((session) =>
+      dayjs(session.startAt).isSame(selectedDay, "day")
+    );
+  }, [sessions, selectedDay, viewMode]);
 
   const trainerName =
     appUser?.trainerProfile?.firstName || appUser?.clientProfile?.firstName || "Trainer";
@@ -66,6 +74,9 @@ export default function ScheduleScreen() {
   const goToPreviousWeek = () => setCurrentWeek(currentWeek.subtract(1, "week"));
   const goToNextWeek = () => setCurrentWeek(currentWeek.add(1, "week"));
   const goToThisWeek = () => setCurrentWeek(dayjs());
+  const goToPreviousDay = () => setSelectedDay(selectedDay.subtract(1, "day"));
+  const goToNextDay = () => setSelectedDay(selectedDay.add(1, "day"));
+  const goToToday = () => setSelectedDay(dayjs());
 
   const handleAddSession = () => {
     setEditingSession(undefined);
@@ -164,29 +175,82 @@ export default function ScheduleScreen() {
               label="Adaugă sesiune"
               variant="outline"
               onPress={handleAddSession}
+              iconName="add-circle-outline"
               className="flex-1"
             />
             <Button
               label={`Filtre${activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ""}`}
               variant="ghost"
               onPress={() => setShowFilters(!showFilters)}
+              iconName="options-outline"
               className="w-32"
+            />
+          </View>
+          <View className="flex-row gap-3 mt-3">
+            <Button
+              label="Săptămână"
+              variant={viewMode === "week" ? "secondary" : "ghost"}
+              onPress={() => setViewMode("week")}
+              iconName="calendar-outline"
+              className="flex-1"
+            />
+            <Button
+              label="Zi"
+              variant={viewMode === "day" ? "secondary" : "ghost"}
+              onPress={() => setViewMode("day")}
+              iconName="time-outline"
+              className="flex-1"
             />
           </View>
         </View>
 
         {/* Week Navigation */}
-        <View className="px-6 mb-4">
-          <WeekNavigator
-            currentWeek={currentWeek}
-            startOfWeek={startOfWeek}
-            endOfWeek={endOfWeek}
-            onPrevious={goToPreviousWeek}
-            onNext={goToNextWeek}
-            onToday={goToThisWeek}
-            isCurrentWeek={currentWeek.isSame(dayjs(), "week")}
-          />
-        </View>
+        {viewMode === "week" ? (
+          <View className="px-6 mb-4">
+            <WeekNavigator
+              currentWeek={currentWeek}
+              startOfWeek={startOfWeek}
+              endOfWeek={endOfWeek}
+              onPrevious={goToPreviousWeek}
+              onNext={goToNextWeek}
+              onToday={goToThisWeek}
+              isCurrentWeek={currentWeek.isSame(dayjs(), "week")}
+            />
+          </View>
+        ) : (
+          <View className="px-6 mb-4">
+            <View className="bg-surface border border-border rounded-2xl p-4 flex-row items-center justify-between">
+              <Button
+                label=" "
+                variant="ghost"
+                onPress={goToPreviousDay}
+                iconName="chevron-back"
+                className="w-12"
+              />
+              <View className="flex-1 items-center">
+                <Text className="text-text-primary text-lg font-semibold">
+                  {selectedDay.format("dddd, D MMMM YYYY")}
+                </Text>
+                {!selectedDay.isSame(dayjs(), "day") && (
+                  <Button
+                    label="Azi"
+                    variant="ghost"
+                    onPress={goToToday}
+                    iconName="time-outline"
+                    className="mt-2"
+                  />
+                )}
+              </View>
+              <Button
+                label=" "
+                variant="ghost"
+                onPress={goToNextDay}
+                iconName="chevron-forward"
+                className="w-12"
+              />
+            </View>
+          </View>
+        )}
 
         {/* Filters */}
         {showFilters && (
@@ -204,7 +268,7 @@ export default function ScheduleScreen() {
         {/* Calendar Content */}
         <View className="px-6 mb-10">
           <Text className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
-            Sesiuni programate
+            {viewMode === "day" ? "Sesiuni pentru ziua selectată" : "Sesiuni programate"}
           </Text>
 
           {sessionsQuery.isLoading ? (
@@ -220,9 +284,9 @@ export default function ScheduleScreen() {
                 Nu am putut încărca sesiunile. Trage în jos pentru refresh.
               </Text>
             </View>
-          ) : sessions.length ? (
+          ) : daySessions.length ? (
             <View>
-              {sessions.map((session) => (
+              {daySessions.map((session) => (
                 <SessionCard
                   key={session.id}
                   session={session}

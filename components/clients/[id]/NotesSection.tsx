@@ -9,7 +9,7 @@ interface NotesSectionProps {
 
 export function NotesSection({ client }: NotesSectionProps) {
   return (
-    <Section title="Notițe personale">
+    <Section title="Notițe personale" icon="document-text-outline">
       <Text className="text-text-primary text-base leading-6">
         {client.goalDescription
           ? `Preferințe: ${client.goalDescription}`

@@ -33,6 +33,7 @@ export async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   const { body, skipAuth = false, headers = {}, ...restOptions } = options;
+  const shouldLogHistory = endpoint.includes('/schedule/sessions/history');
 
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -47,6 +48,9 @@ export async function apiFetch<T>(
   }
 
   const url = `${API_URL}${endpoint}`;
+  if (shouldLogHistory) {
+    console.log('[API][history] request', { url });
+  }
 
   const config: RequestInit = {
     ...restOptions,
@@ -59,19 +63,36 @@ export async function apiFetch<T>(
 
   try {
     const response = await fetch(url, config);
+    if (shouldLogHistory) {
+      console.log('[API][history] response', { status: response.status });
+    }
     const data: ApiResponse<T> = await response.json();
 
     // Handle API error responses
     if (!data.success) {
+      if (shouldLogHistory) {
+        console.error('[API][history] error', {
+          statusCode: data.error.statusCode,
+          message: data.error.message,
+        });
+      }
       throw new ApiError(
         data.error.statusCode,
         data.error.message,
         data.error.details
       );
     }
+    if (shouldLogHistory) {
+      console.log('[API][history] success', { hasData: data.data !== undefined });
+    }
 
     return data.data;
   } catch (error) {
+    if (shouldLogHistory) {
+      console.error('[API][history] exception', {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
     if (error instanceof ApiError) {
       throw error;
     }
