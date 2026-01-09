@@ -25,8 +25,8 @@ type TrainerFields = Field & {
 
 const STATUS_LABELS: Record<NonNullable<ClientProfile["status"]>, string> = {
   ACTIVE: "Activ",
-  PAUSED: "Pauza",
   INACTIVE: "Inactiv",
+  COMPLETED: "Finalizat",
 };
 
 function SectionCard({
@@ -456,7 +456,7 @@ function TrainerProfileScreen({ userRole }: { userRole: UserRole | null }) {
 }
 
 export default function ProfileScreen() {
-  const userRole = useUserRole();
+  const userRole = useUserRole() ?? null;
 
   if (userRole === "CLIENT") {
     return <ClientProfileScreen />;
