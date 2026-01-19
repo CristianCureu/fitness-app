@@ -1,5 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import type { ScheduledSession } from '@/lib/types/api';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,7 +11,11 @@ interface NextSessionCardProps {
   onCancel?: () => void;
   cancelDisabled?: boolean;
   loading?: boolean;
+  clientTimezone?: string;
 }
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function NextSessionCard({
   session,
@@ -17,6 +23,7 @@ export function NextSessionCard({
   onCancel,
   cancelDisabled,
   loading,
+  clientTimezone,
 }: NextSessionCardProps) {
   if (loading) {
     return (
@@ -36,7 +43,8 @@ export function NextSessionCard({
     );
   }
 
-  const sessionDate = dayjs(session.startAt);
+  const timezoneName = clientTimezone || dayjs.tz.guess() || 'UTC';
+  const sessionDate = dayjs(session.startAt).tz(timezoneName);
   const dayName = sessionDate.format('dddd');
   const dateFormatted = sessionDate.format('D MMMM');
   const timeFormatted = sessionDate.format('HH:mm');

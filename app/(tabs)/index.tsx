@@ -1,16 +1,28 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/ro";
 import { NextSessionCard } from "@/components/client-sessions";
 import Button from "@/components/ui/button";
 import FormInput from "@/components/ui/form-input";
+import { CongratsOverlay } from "@/components/ui/congrats-overlay";
 import { useAppUser } from "@/lib/stores/auth-store";
 import { useTodayView } from "@/lib/hooks/queries/use-today";
 import { useUpdateSessionStatus } from "@/lib/hooks/queries/use-sessions";
 import { useAskTodayAi } from "@/lib/hooks/queries/use-ai";
+import { useDeleteCheckin, useUpsertCheckin } from "@/lib/hooks/queries/use-checkins";
 import { useRouter } from "expo-router";
 
 function SectionCard({
@@ -35,22 +47,33 @@ function SectionCard({
   );
 }
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale("ro");
+
 export default function HomeScreen() {
-  dayjs.locale("ro");
   const appUser = useAppUser();
   const router = useRouter();
   const todayQuery = useTodayView();
   const updateSessionStatus = useUpdateSessionStatus();
   const askAi = useAskTodayAi();
+  const upsertCheckin = useUpsertCheckin();
+  const deleteCheckin = useDeleteCheckin();
   const [showAsk, setShowAsk] = useState(false);
   const [askQuestion, setAskQuestion] = useState("");
   const [chatMessages, setChatMessages] = useState<
     Array<{ role: "user" | "assistant"; text: string }>
   >([]);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [congratsMessage, setCongratsMessage] = useState("");
 
   const nextSession = todayQuery.data?.nextSession || null;
+  const clientTimezone =
+    appUser?.clientProfile?.timezone || dayjs.tz.guess() || "UTC";
   const isSessionToday = nextSession
-    ? dayjs(nextSession.startAt).isSame(dayjs(), "day")
+    ? dayjs(nextSession.startAt)
+        .tz(clientTimezone)
+        .isSame(dayjs().tz(clientTimezone), "day")
     : false;
 
   const nutritionTips = useMemo(() => {
@@ -157,6 +180,7 @@ export default function HomeScreen() {
   };
 
   const hasWorkoutToday = isSessionToday;
+  const checkin = todayQuery.data?.checkin;
 
   const focusText = hasWorkoutToday
     ? `Sesiune azi: ${nextSession?.sessionName || "Program"}.`
@@ -166,40 +190,36 @@ export default function HomeScreen() {
     ? "Inainte: carbohidrati usori + apa. Dupa: proteina + legume."
     : "Mentine mesele regulate si o plimbare usoara.";
 
-  useEffect(() => {
-    console.log("[Today] focus", {
-      hasWorkoutToday,
-      focusText,
-      tipsText,
-    });
-  }, [hasWorkoutToday, focusText, tipsText]);
+  const triggerCongrats = (message: string) => {
+    setCongratsMessage(message);
+    setShowCongrats(true);
+  };
 
-  useEffect(() => {
-    if (todayQuery.isError) {
-      console.log("[Today] error", {
-        message:
-          todayQuery.error instanceof Error
-            ? todayQuery.error.message
-            : String(todayQuery.error),
-      });
+  const handleToggleCheckin = () => {
+    if (!hasWorkoutToday) return;
+    if (checkin?.id) {
+      deleteCheckin.mutate(checkin.id);
+      return;
     }
-    if (todayQuery.data) {
-      console.log("[Today] loaded", {
-        hasNextSession: Boolean(todayQuery.data.nextSession),
-        hasNutritionTip: Boolean(todayQuery.data.nutritionTip?.text),
-        hasWorkoutToday: todayQuery.data.dailyRecommendation?.hasWorkoutToday,
-        nextSessionStartAt: todayQuery.data.nextSession?.startAt || null,
-        isSessionToday,
-      });
-    }
-  }, [todayQuery.isError, todayQuery.error, todayQuery.data, isSessionToday]);
+    upsertCheckin.mutate(
+      {},
+      {
+        onSuccess: () => {
+          triggerCongrats("Check-in completat. Bravo!");
+        },
+      }
+    );
+  };
+
+  console.log(nextSession)
+  console.log(isSessionToday)
 
   return (
     <ScrollView className="flex-1 bg-background">
       {/* Header */}
       <View className="px-6 pt-16 pb-6">
         <Text className="text-text-secondary text-sm mb-2">
-          Azi • {dayjs().format("D MMMM YYYY")}
+          Azi • {dayjs().tz(clientTimezone).format("D MMMM YYYY")}
         </Text>
         <Text className="text-text-primary text-3xl font-bold">
           Salut, {appUser?.clientProfile?.firstName || "User"}
@@ -208,13 +228,19 @@ export default function HomeScreen() {
 
       <View className="px-6 pb-6">
         <SectionCard title="Sesiunea de azi" icon="barbell-outline">
-          {nextSession && isSessionToday ? (
+          {todayQuery.isLoading ? (
+            <View className="items-center py-6">
+              <ActivityIndicator size="small" color="#f798af" />
+              <Text className="text-text-muted text-sm mt-2">Se încarcă sesiunea...</Text>
+            </View>
+          ) : nextSession && isSessionToday ? (
             <NextSessionCard
               session={nextSession}
               onViewDetails={handleViewSessionDetails}
               onCancel={handleCancelSession}
               cancelDisabled={updateSessionStatus.isPending}
               loading={todayQuery.isLoading}
+              clientTimezone={clientTimezone}
             />
           ) : (
             <View className="bg-background border border-border rounded-2xl p-4">
@@ -228,8 +254,33 @@ export default function HomeScreen() {
           )}
         </SectionCard>
 
+        {hasWorkoutToday ? (
+          <SectionCard title="Check-in rapid" icon="checkmark-circle-outline">
+            {checkin ? (
+              <Pressable
+                onPress={handleToggleCheckin}
+                className="self-start rounded-full bg-primary/15 border border-primary/40 px-4 py-2"
+              >
+                <Text className="text-primary text-sm font-semibold">Check-in făcut</Text>
+              </Pressable>
+            ) : (
+              <Button
+                label="Check-in"
+                variant="outline"
+                iconName="checkmark-circle-outline"
+                onPress={handleToggleCheckin}
+              />
+            )}
+          </SectionCard>
+        ) : null}
+
         <SectionCard title="Tips nutritie" icon="leaf-outline">
-          {nutritionTips.length ? (
+          {todayQuery.isLoading ? (
+            <View className="items-center py-4">
+              <ActivityIndicator size="small" color="#f798af" />
+              <Text className="text-text-muted text-sm mt-2">Se încarcă tips-urile...</Text>
+            </View>
+          ) : nutritionTips.length ? (
             nutritionTips.map((tip, idx) => (
               <View key={`${tip}-${idx}`} className="flex-row items-start gap-2 mb-2">
                 <Ionicons name="checkmark-circle-outline" size={16} color="#7be495" />
@@ -394,6 +445,12 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      <CongratsOverlay
+        visible={showCongrats}
+        message={congratsMessage}
+        onDone={() => setShowCongrats(false)}
+      />
     </ScrollView>
   );
 }

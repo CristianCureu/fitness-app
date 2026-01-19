@@ -1,15 +1,22 @@
 import { View, Text, Pressable } from 'react-native';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import type { ScheduledSession } from '@/lib/types/api';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SessionListItemProps {
   session: ScheduledSession;
   onPress: () => void;
+  clientTimezone?: string;
 }
 
-export function SessionListItem({ session, onPress }: SessionListItemProps) {
-  const sessionDate = dayjs(session.startAt);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+export function SessionListItem({ session, onPress, clientTimezone }: SessionListItemProps) {
+  const timezoneName = clientTimezone || dayjs.tz.guess() || 'UTC';
+  const sessionDate = dayjs(session.startAt).tz(timezoneName);
   const dayName = sessionDate.format('dddd');
   const timeFormatted = sessionDate.format('HH:mm');
 

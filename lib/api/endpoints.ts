@@ -38,6 +38,7 @@ import type {
   Program,
   RecommendationQueryParams,
   RegisterRequest,
+  UpdateMyProfileDto,
   ScheduledSession,
   SessionQueryParams,
   SessionStatus,
@@ -110,10 +111,22 @@ export const clientApi = {
     api.get<ClientProfile>(`/clients/${id}`),
 
   /**
+   * Get own client profile
+   */
+  getMyProfile: () =>
+    api.get<ClientProfile>('/clients/me/profile'),
+
+  /**
    * Update client profile (TRAINER only)
    */
   update: (id: string, data: Partial<CreateClientProfileDto>) =>
     api.patch<ClientProfile>(`/clients/${id}`, data),
+
+  /**
+   * Update own client profile (CLIENT only)
+   */
+  updateMyProfile: (data: UpdateMyProfileDto) =>
+    api.patch<ClientProfile>('/clients/me/profile', data),
 
   /**
    * Delete client (TRAINER only)
@@ -289,10 +302,7 @@ export const checkinApi = {
    * Creates or updates check-in for today
    */
   upsertToday: (data: CreateCheckinDto) =>
-    api.post<DailyCheckin>('/checkins/today', {
-      ...data,
-      note: data.notes,
-    }),
+    api.post<DailyCheckin>('/checkins/today', data),
 
   /**
    * Get all check-ins
@@ -312,10 +322,7 @@ export const checkinApi = {
    * Update check-in (CLIENT and TRAINER)
    */
   update: (id: string, data: Partial<CreateCheckinDto>) =>
-    api.patch<DailyCheckin>(`/checkins/${id}`, {
-      ...data,
-      note: data.notes,
-    }),
+    api.patch<DailyCheckin>(`/checkins/${id}`, data),
 
   /**
    * Delete check-in (CLIENT and TRAINER)

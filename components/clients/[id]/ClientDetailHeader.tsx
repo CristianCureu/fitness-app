@@ -15,7 +15,8 @@ interface ClientDetailHeaderProps {
 }
 
 export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
-  const styles = STATUS_STYLES[client.status];
+  const status = client.status && client.status in STATUS_STYLES ? client.status : "ACTIVE";
+  const styles = STATUS_STYLES[status];
 
   // Calculate program timeline with dayjs
   const timeline = (() => {

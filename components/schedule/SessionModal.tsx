@@ -2,10 +2,15 @@ import { Button } from "@/components/ui/button";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import type { ClientProfile, CreateSessionDto, ScheduledSession } from "@/lib/types/api";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import FormInput from "../ui/form-input";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const SESSION_TYPES = [
   "Antrenament Personal",
@@ -72,32 +77,48 @@ export function SessionModal({
   const sessionType = watch("sessionType");
   const sessionName = watch("sessionName");
 
+  const selectedClient = clients.find((c) => c.id === clientId);
+  const clientTimezone =
+    selectedClient?.timezone || dayjs.tz.guess() || "UTC";
+
   // Reset form when modal opens/closes or session changes
   useEffect(() => {
     if (visible) {
+      const timezoneName =
+        clients.find((c) => c.id === (session?.clientId || clientId))?.timezone ||
+        dayjs.tz.guess() ||
+        "UTC";
       reset({
         clientId: session?.clientId || "",
         sessionType: session?.sessionType || SESSION_TYPES[0],
         sessionName: session?.sessionName || "",
-        startAt: session ? new Date(session.startAt) : new Date(),
-        endAt: session ? new Date(session.endAt) : dayjs().add(1, "hour").toDate(),
+        startAt: session
+          ? dayjs(session.startAt).tz(timezoneName).toDate()
+          : new Date(),
+        endAt: session
+          ? dayjs(session.endAt).tz(timezoneName).toDate()
+          : dayjs().add(1, "hour").toDate(),
       });
     }
-  }, [visible, session, reset]);
+  }, [visible, session, reset, clients, clientId]);
 
   const onSubmit = (formData: SessionFormData) => {
+    const startAt = dayjs
+      .tz(dayjs(formData.startAt).format("YYYY-MM-DD HH:mm"), clientTimezone)
+      .toISOString();
+    const endAt = dayjs
+      .tz(dayjs(formData.endAt).format("YYYY-MM-DD HH:mm"), clientTimezone)
+      .toISOString();
     const data: CreateSessionDto = {
       clientId: formData.clientId,
       sessionType: formData.sessionType,
       sessionName: formData.sessionName,
-      startAt: formData.startAt.toISOString(),
-      endAt: formData.endAt.toISOString(),
+      startAt,
+      endAt,
     };
 
     onSave(data);
   };
-
-  const selectedClient = clients.find((c) => c.id === clientId);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">

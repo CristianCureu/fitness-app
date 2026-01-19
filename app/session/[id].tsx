@@ -6,19 +6,25 @@ import {
   Pressable,
   TextInput,
   Alert,
-} from 'react-native';
-import { useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import dayjs from 'dayjs';
-import { Ionicons } from '@expo/vector-icons';
-import { useSessionDetails, useCompleteSession } from '@/lib/hooks/queries/use-sessions';
-import { ExerciseCard } from '@/components/client-sessions';
+} from "react-native";
+import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { Ionicons } from "@expo/vector-icons";
+import { useSessionDetails, useCompleteSession } from "@/lib/hooks/queries/use-sessions";
+import { ExerciseCard } from "@/components/client-sessions";
+import { CongratsOverlay } from "@/components/ui/congrats-overlay";
+import { useAppUser } from "@/lib/stores/auth-store";
 
 export default function SessionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [notes, setNotes] = useState('');
+  const appUser = useAppUser();
+  const [notes, setNotes] = useState("");
   const [showNotesInput, setShowNotesInput] = useState(false);
+  const [showCongrats, setShowCongrats] = useState(false);
 
   const sessionQuery = useSessionDetails(id);
   const completeSessionMutation = useCompleteSession();
@@ -29,26 +35,24 @@ export default function SessionDetailScreen() {
     if (!session) return;
 
     Alert.alert(
-      'Marchează sesiunea ca terminată',
-      'Ești sigur că vrei să marchezi această sesiune ca terminată?',
+      "Marchează sesiunea ca terminată",
+      "Ești sigur că vrei să marchezi această sesiune ca terminată?",
       [
-        { text: 'Anulează', style: 'cancel' },
+        { text: "Anulează", style: "cancel" },
         {
-          text: 'Confirmă',
+          text: "Confirmă",
           onPress: () => {
             completeSessionMutation.mutate(
               { id: session.id, data: { notes: notes || undefined } },
               {
                 onSuccess: () => {
-                  Alert.alert('Success', 'Sesiune marcată ca terminată!', [
-                    {
-                      text: 'OK',
-                      onPress: () => router.back(),
-                    },
-                  ]);
+                  setShowCongrats(true);
                 },
-                onError: (error: any) => {
-                  Alert.alert('Eroare', error.message || 'Nu am putut marca sesiunea ca terminată');
+                onError: (error) => {
+                  Alert.alert(
+                    "Eroare",
+                    error.message || "Nu am putut marca sesiunea ca terminată"
+                  );
                 },
               }
             );
@@ -79,12 +83,18 @@ export default function SessionDetailScreen() {
     );
   }
 
-  const sessionDate = dayjs(session.startAt);
-  const dayName = sessionDate.format('dddd');
-  const dateFormatted = sessionDate.format('D MMMM YYYY');
-  const timeFormatted = sessionDate.format('HH:mm');
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  const clientTimezone = appUser?.clientProfile?.timezone || dayjs.tz.guess() || "UTC";
+  const sessionDate = dayjs(session.startAt).tz(clientTimezone);
+  const dayName = sessionDate.format("dddd");
+  const dateFormatted = sessionDate.format("D MMMM YYYY");
+  const timeFormatted = sessionDate.format("HH:mm");
 
-  const canComplete = session.status === 'SCHEDULED' && (sessionDate.isBefore(dayjs(), 'day') || sessionDate.isSame(dayjs(), 'day'));
+  const now = dayjs().tz(clientTimezone);
+  const canComplete =
+    session.status === "SCHEDULED" &&
+    (sessionDate.isBefore(now, "day") || sessionDate.isSame(now, "day"));
 
   return (
     <View className="flex-1 bg-background">
@@ -107,9 +117,7 @@ export default function SessionDetailScreen() {
 
         <View className="flex-row items-center">
           <Ionicons name="time-outline" size={16} color="#A3ADC8" />
-          <Text className="text-text-secondary text-base ml-2">
-            {timeFormatted}
-          </Text>
+          <Text className="text-text-secondary text-base ml-2">{timeFormatted}</Text>
         </View>
 
         {session.sessionType && (
@@ -152,7 +160,7 @@ export default function SessionDetailScreen() {
                 Notițe (opțional)
               </Text>
               <Ionicons
-                name={showNotesInput ? 'chevron-up' : 'chevron-down'}
+                name={showNotesInput ? "chevron-up" : "chevron-down"}
                 size={20}
                 color="#A3ADC8"
                 style={{ marginLeft: 8 }}
@@ -193,6 +201,15 @@ export default function SessionDetailScreen() {
           </Pressable>
         </View>
       )}
+
+      <CongratsOverlay
+        visible={showCongrats}
+        message="Sesiune terminată. Super!"
+        onDone={() => {
+          setShowCongrats(false);
+          router.back();
+        }}
+      />
     </View>
   );
 }

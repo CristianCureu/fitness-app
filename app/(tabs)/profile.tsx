@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Switch, Text, View } from "react-native";
 import Button from "@/components/ui/button";
 import { useTodayView } from "@/lib/hooks/queries/use-today";
 import { useMealIdeas } from "@/lib/hooks/queries/use-nutrition";
@@ -9,6 +9,10 @@ import { useMealIdeasAi, useWeeklyFeedbackAi } from "@/lib/hooks/queries/use-ai"
 import { useAuthStore, useUserRole } from "@/lib/stores/auth-store";
 import type { ClientProfile, TrainerProfile, UserRole } from "@/lib/types/api";
 import type { User } from "@supabase/supabase-js";
+import { useUpdateMyProfile } from "@/lib/hooks/queries/use-clients";
+import { useRouter } from "expo-router";
+import { CongratsOverlay } from "@/components/ui/congrats-overlay";
+import { registerForPushNotificationsAsync } from "@/lib/notifications/push";
 
 interface Field {
   label: string;
@@ -52,17 +56,27 @@ function SectionCard({
 }
 
 function ClientProfileScreen() {
+  const router = useRouter();
   const appUser = useAuthStore((state) => state.appUser);
   const supabaseUser = useAuthStore((state) => state.supabaseUser);
   const signOut = useAuthStore((state) => state.signOut);
+  const refreshUser = useAuthStore((state) => state.refreshUser);
   const todayQuery = useTodayView();
   const mealIdeasQuery = useMealIdeas();
   const mealIdeasAi = useMealIdeasAi();
   const weeklyFeedbackQuery = useWeeklyFeedbackAi();
+  const updateMyProfile = useUpdateMyProfile();
 
   const clientProfile = appUser?.clientProfile;
 
   const [generatedMeals, setGeneratedMeals] = useState<string[]>([]);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [congratsMessage, setCongratsMessage] = useState("");
+
+  const triggerCongrats = (message: string) => {
+    setCongratsMessage(message);
+    setShowCongrats(true);
+  };
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -136,6 +150,69 @@ function ClientProfileScreen() {
     }
   }, [weeklyFeedbackQuery.isError, weeklyFeedbackQuery.error, weeklyFeedbackQuery.data]);
 
+  const pushEnabled = clientProfile?.pushEnabled ?? false;
+  const pushSessionReminders = clientProfile?.pushSessionReminders ?? true;
+  const pushDailyTips = clientProfile?.pushDailyTips ?? true;
+  const pushWeeklyMessage = clientProfile?.pushWeeklyMessage ?? true;
+
+  const handleTogglePush = async (nextValue: boolean) => {
+    if (nextValue) {
+      const token = await registerForPushNotificationsAsync();
+      if (!token) {
+        Alert.alert("Notificări", "Permisiunea pentru notificări nu a fost acordată.");
+        return;
+      }
+      updateMyProfile.mutate(
+        {
+          pushEnabled: true,
+          pushToken: token,
+        },
+        {
+          onSuccess: async () => {
+            await refreshUser();
+          },
+        }
+      );
+      return;
+    }
+
+    updateMyProfile.mutate(
+      {
+        pushEnabled: false,
+      },
+      {
+        onSuccess: async () => {
+          await refreshUser();
+        },
+      }
+    );
+  };
+
+  const handleTogglePushSetting = (key: "pushSessionReminders" | "pushDailyTips" | "pushWeeklyMessage", value: boolean) => {
+    updateMyProfile.mutate(
+      {
+        [key]: value,
+      } as any,
+      {
+        onSuccess: async () => {
+          await refreshUser();
+        },
+      }
+    );
+  };
+
+  const handleCompleteObjective = () => {
+    updateMyProfile.mutate(
+      { status: "COMPLETED" },
+      {
+        onSuccess: async () => {
+          await refreshUser();
+          triggerCongrats("Obiectiv atins. Felicitări!");
+        },
+      }
+    );
+  };
+
   return (
     <ScrollView className="flex-1 bg-background">
       <View className="px-6 pt-16 pb-6">
@@ -163,6 +240,13 @@ function ClientProfileScreen() {
                 {supabaseUser?.email || "-"}
               </Text>
             </View>
+            <Button
+              label="Editează profilul"
+              variant="outline"
+              iconName="create-outline"
+              onPress={() => router.push("/profile/edit")}
+              className="mt-2"
+            />
           </View>
         </SectionCard>
 
@@ -173,6 +257,59 @@ function ClientProfileScreen() {
           <Text className="text-text-muted text-sm mt-2">
             Status: {STATUS_LABELS[clientProfile?.status || "ACTIVE"]}
           </Text>
+          {clientProfile?.status !== "COMPLETED" ? (
+            <Button
+              label="Marchează obiectiv atins"
+              variant="outline"
+              iconName="trophy-outline"
+              onPress={handleCompleteObjective}
+              className="mt-3"
+              loading={updateMyProfile.isPending}
+              disabled={updateMyProfile.isPending}
+            />
+          ) : null}
+        </SectionCard>
+
+        <SectionCard title="Informații onboarding" icon="clipboard-outline">
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-text-secondary text-sm">Vârstă</Text>
+              <Text className="text-text-primary text-sm font-semibold">
+                {clientProfile?.age ? `${clientProfile.age} ani` : "-"}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-text-secondary text-sm">Înălțime</Text>
+              <Text className="text-text-primary text-sm font-semibold">
+                {clientProfile?.height ? `${clientProfile.height} cm` : "-"}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-text-secondary text-sm">Greutate</Text>
+              <Text className="text-text-primary text-sm font-semibold">
+                {clientProfile?.weight ? `${clientProfile.weight} kg` : "-"}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-text-secondary text-sm">Sesiuni / săpt.</Text>
+              <Text className="text-text-primary text-sm font-semibold">
+                {clientProfile?.recommendedSessionsPerWeek || "-"}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-text-secondary text-sm">Timezone</Text>
+              <Text className="text-text-primary text-sm font-semibold">
+                {clientProfile?.timezone || "UTC"}
+              </Text>
+            </View>
+            <Button
+              label="Editează datele"
+              variant="outline"
+              iconName="create-outline"
+              onPress={() => router.push("/profile/edit")}
+              className="mt-2"
+            />
+          </View>
         </SectionCard>
 
         <SectionCard title="Nutritie" icon="leaf-outline">
@@ -251,11 +388,38 @@ function ClientProfileScreen() {
         <SectionCard title="Notificari" icon="notifications-outline">
           <View className="flex-row items-center justify-between mb-2">
             <Text className="text-text-secondary text-sm">Reminder antrenament</Text>
-            <Text className="text-primary text-sm">Activ</Text>
+            <Switch
+              value={pushSessionReminders && pushEnabled}
+              onValueChange={(value) => handleTogglePushSetting("pushSessionReminders", value)}
+              disabled={!pushEnabled}
+              thumbColor="#f798af"
+            />
           </View>
           <View className="flex-row items-center justify-between">
             <Text className="text-text-secondary text-sm">Tips nutritie</Text>
-            <Text className="text-primary text-sm">Activ</Text>
+            <Switch
+              value={pushDailyTips && pushEnabled}
+              onValueChange={(value) => handleTogglePushSetting("pushDailyTips", value)}
+              disabled={!pushEnabled}
+              thumbColor="#f798af"
+            />
+          </View>
+          <View className="flex-row items-center justify-between mt-2">
+            <Text className="text-text-secondary text-sm">Mesaj săptămânal</Text>
+            <Switch
+              value={pushWeeklyMessage && pushEnabled}
+              onValueChange={(value) => handleTogglePushSetting("pushWeeklyMessage", value)}
+              disabled={!pushEnabled}
+              thumbColor="#f798af"
+            />
+          </View>
+          <View className="flex-row items-center justify-between mt-3">
+            <Text className="text-text-secondary text-sm">Notificări push</Text>
+            <Switch
+              value={pushEnabled}
+              onValueChange={handleTogglePush}
+              thumbColor="#f798af"
+            />
           </View>
         </SectionCard>
 
@@ -276,6 +440,11 @@ function ClientProfileScreen() {
           className="mb-10"
         />
       </View>
+      <CongratsOverlay
+        visible={showCongrats}
+        message={congratsMessage}
+        onDone={() => setShowCongrats(false)}
+      />
     </ScrollView>
   );
 }

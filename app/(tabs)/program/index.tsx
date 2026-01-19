@@ -1,6 +1,8 @@
 import { ScrollView, Text, View, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { Ionicons } from '@expo/vector-icons';
 import { WeekCalendar, SessionListItem } from '@/components/client-sessions';
 import { DateTimePicker } from '@/components/ui/DateTimePicker';
@@ -12,10 +14,15 @@ import {
 } from '@/lib/hooks/queries/use-sessions';
 import { useTodayView } from '@/lib/hooks/queries/use-today';
 import { useRouter } from 'expo-router';
+import { useAppUser } from '@/lib/stores/auth-store';
 import type { ScheduledSession } from '@/lib/types/api';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default function ProgramScreen() {
   const router = useRouter();
+  const appUser = useAppUser();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDaySessions, setSelectedDaySessions] = useState<ScheduledSession[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -27,11 +34,20 @@ export default function ProgramScreen() {
   const [confirming, setConfirming] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
 
-  const [weekStart, setWeekStart] = useState<Dayjs>(dayjs().startOf('isoWeek'));
+  const clientTimezone =
+    appUser?.clientProfile?.timezone || dayjs.tz.guess() || 'UTC';
+
+  const [weekStart, setWeekStart] = useState<Dayjs>(
+    dayjs().tz(clientTimezone).startOf('isoWeek')
+  );
   const weekCalendarQuery = useWeekCalendar(weekStart.format('YYYY-MM-DD'));
   const todayQuery = useTodayView();
   const createClientSession = useCreateClientSession();
   const recommendationMutation = useClientSessionRecommendation();
+
+  useEffect(() => {
+    setWeekStart(dayjs().tz(clientTimezone).startOf('isoWeek'));
+  }, [clientTimezone]);
 
   const sessions = weekCalendarQuery.data?.sessions || [];
 
@@ -91,7 +107,11 @@ export default function ProgramScreen() {
     try {
       await ensureRecommendation();
       createClientSession.mutate(
-        { startAt: scheduledFor.toISOString() },
+        {
+          startAt: dayjs
+            .tz(dayjs(scheduledFor).format('YYYY-MM-DD HH:mm'), clientTimezone)
+            .toISOString(),
+        },
         {
           onSuccess: () => {
             console.log('[Schedule] client session created');
@@ -120,8 +140,8 @@ export default function ProgramScreen() {
 
   const sessionSummary = useMemo(() => {
     if (!scheduledFor) return '';
-    return dayjs(scheduledFor).format('DD MMM YYYY, HH:mm');
-  }, [scheduledFor]);
+    return dayjs(scheduledFor).tz(clientTimezone).format('DD MMM YYYY, HH:mm');
+  }, [scheduledFor, clientTimezone]);
 
   return (
     <ScrollView
@@ -261,6 +281,7 @@ export default function ProgramScreen() {
           loading={weekCalendarQuery.isLoading}
           weekStart={weekStart}
           onWeekChange={setWeekStart}
+          clientTimezone={clientTimezone}
         />
       </View>
 
@@ -268,13 +289,14 @@ export default function ProgramScreen() {
       {selectedDate && selectedDaySessions.length > 0 && (
         <View className="px-6 mb-6">
           <Text className="text-text-secondary text-sm font-semibold mb-3 uppercase tracking-wider">
-            Sesiuni pentru {dayjs(selectedDate).format('D MMMM YYYY')}
+            Sesiuni pentru {dayjs(selectedDate).tz(clientTimezone).format('D MMMM YYYY')}
           </Text>
           {selectedDaySessions.map((session) => (
             <SessionListItem
               key={session.id}
               session={session}
               onPress={() => handleSessionPress(session.id)}
+              clientTimezone={clientTimezone}
             />
           ))}
         </View>
@@ -302,6 +324,7 @@ export default function ProgramScreen() {
               key={session.id}
               session={session}
               onPress={() => handleSessionPress(session.id)}
+              clientTimezone={clientTimezone}
             />
           ))
         )}

@@ -8,15 +8,19 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSessionHistory } from '@/lib/hooks/queries/use-sessions';
 import type { ScheduledSession } from '@/lib/types/api';
+import { useAppUser } from '@/lib/stores/auth-store';
 
 const ITEMS_PER_PAGE = 20;
 
 export default function SessionHistoryScreen() {
   const router = useRouter();
+  const appUser = useAppUser();
   const [offset, setOffset] = useState(0);
 
   const historyQuery = useSessionHistory(ITEMS_PER_PAGE, offset);
@@ -39,8 +43,15 @@ export default function SessionHistoryScreen() {
     }
   };
 
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  const clientTimezone =
+    appUser?.clientProfile?.timezone || dayjs.tz.guess() || 'UTC';
+
   const renderSessionItem = ({ item }: { item: ScheduledSession }) => {
-    const completedDate = item.completedAt ? dayjs(item.completedAt) : null;
+    const completedDate = item.completedAt
+      ? dayjs(item.completedAt).tz(clientTimezone)
+      : null;
     const dateFormatted = completedDate
       ? completedDate.format('D MMMM YYYY')
       : '';

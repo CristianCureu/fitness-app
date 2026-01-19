@@ -60,6 +60,11 @@ export interface ClientProfile {
   firstName: string;
   lastName: string;
   timezone?: string;
+  pushToken?: string;
+  pushEnabled?: boolean;
+  pushSessionReminders?: boolean;
+  pushDailyTips?: boolean;
+  pushWeeklyMessage?: boolean;
   age?: number;
   height?: number; // in cm
   weight?: number; // in kg
@@ -79,6 +84,11 @@ export interface CreateClientProfileDto {
   firstName: string;
   lastName: string;
   timezone?: string;
+  pushToken?: string;
+  pushEnabled?: boolean;
+  pushSessionReminders?: boolean;
+  pushDailyTips?: boolean;
+  pushWeeklyMessage?: boolean;
   age?: number;
   height?: number;
   weight?: number;
@@ -87,6 +97,23 @@ export interface CreateClientProfileDto {
   programStartDate?: string;
   programWeeks?: number;
   recommendedSessionsPerWeek?: number;
+}
+
+export interface UpdateMyProfileDto {
+  firstName?: string;
+  lastName?: string;
+  timezone?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  goalDescription?: string;
+  recommendedSessionsPerWeek?: number;
+  status?: ClientStatus;
+  pushToken?: string;
+  pushEnabled?: boolean;
+  pushSessionReminders?: boolean;
+  pushDailyTips?: boolean;
+  pushWeeklyMessage?: boolean;
 }
 
 // Session Types
@@ -153,22 +180,11 @@ export interface DailyCheckin {
   id: string;
   clientId: string;
   date: string;
-  weight?: number;
-  sleepHours?: number;
-  energyLevel?: number; // 1-10
-  stressLevel?: number; // 1-10
-  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateCheckinDto {
-  weight?: number;
-  sleepHours?: number;
-  energyLevel?: number;
-  stressLevel?: number;
-  notes?: string;
-}
+export interface CreateCheckinDto {}
 
 // Recommendation Types
 export interface DailyRecommendation {

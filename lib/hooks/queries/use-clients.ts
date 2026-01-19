@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientApi } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/api/query-keys';
-import type { CreateClientProfileDto } from '@/lib/types/api';
+import type { CreateClientProfileDto, UpdateMyProfileDto } from '@/lib/types/api';
 
 /**
  * Get all clients
@@ -52,6 +52,21 @@ export function useUpdateClient() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clients.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.clients.detail(variables.id) });
+    },
+  });
+}
+
+/**
+ * Update own client profile (CLIENT only)
+ */
+export function useUpdateMyProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateMyProfileDto) => clientApi.updateMyProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.today.all() });
     },
   });
 }

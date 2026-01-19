@@ -2,10 +2,14 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import type { ScheduledSession } from '@/lib/types/api';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 dayjs.extend(isoWeek);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface WeekCalendarProps {
   sessions: ScheduledSession[];
@@ -13,6 +17,7 @@ interface WeekCalendarProps {
   loading?: boolean;
   weekStart: Dayjs;
   onWeekChange: (weekStart: Dayjs) => void;
+  clientTimezone?: string;
 }
 
 export function WeekCalendar({
@@ -21,16 +26,18 @@ export function WeekCalendar({
   loading,
   weekStart,
   onWeekChange,
+  clientTimezone,
 }: WeekCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const timezoneName = clientTimezone || dayjs.tz.guess() || 'UTC';
 
   const weekDays = Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'));
   const weekEnd = weekStart.add(6, 'day');
-  const isCurrentWeek = weekStart.isSame(dayjs().startOf('isoWeek'), 'day');
+  const isCurrentWeek = weekStart.isSame(dayjs().tz(timezoneName).startOf('isoWeek'), 'day');
 
   const getSessionsForDay = (date: Dayjs) => {
     return sessions.filter((session) =>
-      dayjs(session.startAt).isSame(date, 'day')
+      dayjs(session.startAt).tz(timezoneName).isSame(date, 'day')
     );
   };
 
@@ -85,7 +92,7 @@ export function WeekCalendar({
       </View>
       {!isCurrentWeek && (
         <Pressable
-          onPress={() => onWeekChange(dayjs().startOf('isoWeek'))}
+          onPress={() => onWeekChange(dayjs().tz(timezoneName).startOf('isoWeek'))}
           className="self-start mb-3 px-3 py-1 rounded-full bg-primary/15 border border-primary/40"
         >
           <Text className="text-primary text-xs font-semibold">Saptamana curenta</Text>
@@ -98,7 +105,7 @@ export function WeekCalendar({
             const daySessions = getSessionsForDay(day);
             const hasSession = daySessions.length > 0;
             const isSelected = selectedDate && day.isSame(selectedDate, 'day');
-            const isToday = day.isSame(dayjs(), 'day');
+            const isToday = day.isSame(dayjs().tz(timezoneName), 'day');
 
             const dayName = day.format('ddd').substring(0, 2);
             const dayNumber = day.format('D');
